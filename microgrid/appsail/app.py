@@ -25,6 +25,10 @@ SAMPLE = os.path.join(HERE, "data", "sample_test_input.csv")
 MAX_BODY = 5 * 1024 * 1024
 WINDOW = 24
 STARTED = time.time()
+# The Catalyst deployment is the HackSphere submission: open straight on the Grid (microgrid) screen.
+OPEN_ON_GRID = b"<script>if(!location.hash)history.replaceState(null,'','#/grid')</script>"
+mimetypes.add_type("application/manifest+json", ".webmanifest")
+mimetypes.add_type("text/javascript", ".js")
 
 
 def load_sample():
@@ -115,8 +119,11 @@ class Handler(BaseHTTPRequestHandler):
         if not os.path.isfile(fp):
             return self._send(503, b"Web app not bundled: run microgrid/build_catalyst.sh before deploying.", "text/plain; charset=utf-8")
         with open(fp, "rb") as f:
-            ctype = mimetypes.guess_type(fp)[0] or "application/octet-stream"
-            return self._send(200, f.read(), ctype + ("; charset=utf-8" if ctype.startswith("text") or ctype.endswith("javascript") else ""))
+            body = f.read()
+        if fp.endswith("index.html"):
+            body = body.replace(b"<head>", b"<head>" + OPEN_ON_GRID, 1)
+        ctype = mimetypes.guess_type(fp)[0] or "application/octet-stream"
+        return self._send(200, body, ctype + ("; charset=utf-8" if ctype.startswith("text") or ctype.endswith("javascript") else ""))
 
     def do_POST(self):
         path = urlparse(self.path).path

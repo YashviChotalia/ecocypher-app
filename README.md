@@ -155,6 +155,15 @@ cd microgrid/appsail && python app.py      # API + built app, http://localhost:9
 
 **4. Deploy to Catalyst**
 
+On Windows, one script does it all: it installs the CLI, signs you in, picks the project and deploys.
+
+```powershell
+cd microgrid
+powershell -ExecutionPolicy Bypass -File .\deploy-catalyst.ps1          # add -Rebuild to rebuild the web app first
+```
+
+Or step by step:
+
 ```bash
 npm install -g zcatalyst-cli
 catalyst login
@@ -162,7 +171,7 @@ bash microgrid/build_catalyst.sh           # builds the web app into microgrid/a
 cd microgrid && catalyst deploy            # AppSail: source appsail · Python · "python3 app.py"
 ```
 
-Make the AppSail URL public (no authentication) for judging. For persistence, create the Data Store table `forecast_runs`
+The deployed app opens on the Grid screen. Make the AppSail URL public (no authentication) for judging. For persistence, create the Data Store table `forecast_runs`
 (`run_id, created_at, source, window_start` text · `peak_kw, final_soc_pct` double · `overload_hours, transitions` int · `payload` text)
 and a Stratus bucket. Then `pip install zcatalyst-sdk -t microgrid/appsail` before deploying. Without them, runs are kept in a local log.
 
