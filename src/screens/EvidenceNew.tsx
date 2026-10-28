@@ -1,4 +1,4 @@
-import { ArrowLeft, FileUp, QrCode, ShieldAlert, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, FileUp, ShieldAlert, ShieldCheck } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { QrScanner } from '../components/QrScanner';
 import { KIND_LABEL, toast } from '../components/ui';
@@ -19,14 +19,13 @@ export function EvidenceNew({ tab }: { tab?: string }) {
     <div className="stack" style={{ gap: 18 }}>
       <a className="link row" href={href({ name: 'evidence' })} style={{ gap: 6 }}><ArrowLeft size={18} aria-hidden /> Evidence</a>
       <header className="stack" style={{ gap: 6 }}>
-        <span className="eyebrow">Add evidence</span>
         <h1 className="page-title">Add evidence</h1>
-        <p className="lede">Each item is fingerprinted with SHA-256 the moment it is added, so later changes can be detected.</p>
+        <p className="muted">It is fingerprinted the moment you add it, so any later change shows up.</p>
       </header>
       {!can('write') && <div className="note warn">You have view-only access. Ask an admin for manager access to add evidence.</div>}
-      <div className="segmented" role="tablist" aria-label="How to add">
-        <button role="tab" aria-pressed={mode === 'upload'} aria-selected={mode === 'upload'} onClick={() => setMode('upload')}><FileUp size={16} aria-hidden /> Document or data</button>
-        <button role="tab" aria-pressed={mode === 'mrv'} aria-selected={mode === 'mrv'} onClick={() => setMode('mrv')}><QrCode size={16} aria-hidden /> EcoCypher MRV record</button>
+      <div className="tabs" role="tablist" aria-label="How to add">
+        <button role="tab" aria-pressed={mode === 'upload'} aria-selected={mode === 'upload'} onClick={() => setMode('upload')}>Document</button>
+        <button role="tab" aria-pressed={mode === 'mrv'} aria-selected={mode === 'mrv'} onClick={() => setMode('mrv')}>Scan MRV receipt</button>
       </div>
       {mode === 'upload' ? <UploadForm /> : <MrvImport presetId={presetId} />}
     </div>

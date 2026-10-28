@@ -21,7 +21,7 @@ const NAV: { route: Route; label: string; Icon: typeof BarChart3; match: Route['
   { route: { name: 'dashboard' }, label: 'Overview', Icon: BarChart3, match: ['dashboard'] },
   { route: { name: 'claims' }, label: 'Claims', Icon: FileCheck2, match: ['claims', 'claim'] },
   { route: { name: 'evidence' }, label: 'Evidence', Icon: FolderLock, match: ['evidence', 'evidence-new', 'evidence-item'] },
-  { route: { name: 'data' }, label: 'Data', Icon: Database, match: ['data'] },
+  { route: { name: 'data' }, label: 'Energy', Icon: Database, match: ['data'] },
   { route: { name: 'reports' }, label: 'Reports', Icon: FileText, match: ['reports'] },
 ];
 
@@ -54,12 +54,11 @@ function Shell() {
       <aside className="sidebar" aria-label="Main">
         <a className="brand" href={href({ name: 'dashboard' })}>
           <img src="/logo.svg" alt="" width={36} height={36} />
-          <span><b>EcoCypher</b><small>ESG workspace</small></span>
+          <span><b>EcoCypher</b><small>{active?.company.name}</small></span>
         </a>
-        <div className="company-pill" title={active?.company.name}>{active?.company.name}</div>
         {NAV.map((n) => <a key={n.label} className="side-link" href={href(n.route)} aria-current={current(n)}><n.Icon aria-hidden /> {n.label}</a>)}
         <div className="spacer" />
-        {repo.mode === 'demo' && <div className="demo-pill">Demo workspace</div>}
+        {repo.mode === 'demo' && <p className="demo-note">Demo workspace</p>}
         <a className="side-link" href={href({ name: 'settings' })} aria-current={route.name === 'settings' ? 'page' : undefined}><SettingsIcon aria-hidden /> Settings</a>
       </aside>
 

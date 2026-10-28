@@ -105,14 +105,12 @@ export function Data() {
 
   return (
     <>
-      <PageHeader eyebrow="Activity data" title="Facilities & energy" actions={write && (
+      <PageHeader title="Energy data" actions={write && (
         <>
-          <label className="btn btn-ghost" style={{ cursor: 'pointer' }}><Upload aria-hidden /> Import CSV<input type="file" accept=".csv,text/csv" className="sr-only" onChange={(e) => { void importCsv(e.target.files?.[0]); e.target.value = ''; }} /></label>
+          <label className="btn btn-ghost" style={{ cursor: 'pointer' }}><Upload aria-hidden /> Import<input type="file" accept=".csv,text/csv" className="sr-only" onChange={(e) => { void importCsv(e.target.files?.[0]); e.target.value = ''; }} /></label>
           <button className="btn btn-primary" onClick={openNew} disabled={!facilities.data?.length}><Plus aria-hidden /> Add month</button>
         </>
-      )}>
-        Monthly electricity and fuel use per facility. Scope 1 and 2 emissions and BRSR energy figures are calculated from this.
-      </PageHeader>
+      )} />
       <ErrorNote error={facilities.error || energy.error} />
 
       <section className="stack">

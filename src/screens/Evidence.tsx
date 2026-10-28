@@ -1,7 +1,7 @@
-import { FilePlus2, FolderOpen, Search, ShieldAlert, ShieldCheck } from 'lucide-react';
+import { FilePlus2, FolderOpen, Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { AnchorChip, Empty, ErrorNote, KIND_LABEL, Loading, PageHeader } from '../components/ui';
-import { fmtDate, fmtNum } from '../lib/format';
+import { Empty, ErrorNote, KIND_LABEL, Loading, PageHeader } from '../components/ui';
+import { fmtDate } from '../lib/format';
 import { useIntegrity, useWorkspaceData } from '../lib/hooks';
 import { href } from '../lib/router';
 import { useSession } from '../lib/session';
@@ -24,22 +24,20 @@ export function EvidenceList() {
 
   return (
     <>
-      <PageHeader eyebrow="Evidence library" title="Evidence" actions={can('write') && (
-        <a className="btn btn-primary" href={href({ name: 'evidence-new' })}><FilePlus2 aria-hidden /> Add evidence</a>
-      )}>
-        Every document and MRV record gets a SHA-256 fingerprint when it is added. If anything changes later, it shows here as altered.
-      </PageHeader>
+      <PageHeader title="Evidence" actions={can('write') && (
+        <a className="btn btn-primary" href={href({ name: 'evidence-new' })}><FilePlus2 aria-hidden /> Add</a>
+      )} />
       <ErrorNote error={evidence.error} />
 
       <div className="toolbar">
         <div className="search">
           <Search size={18} aria-hidden />
           <label className="sr-only" htmlFor="ev-search">Search evidence</label>
-          <input id="ev-search" className="input" placeholder="Search by title, ID or file" value={q} onChange={(e) => setQ(e.target.value)} />
+          <input id="ev-search" className="input" placeholder="Search" value={q} onChange={(e) => setQ(e.target.value)} />
         </div>
         <label className="select-inline">
           <span className="sr-only">Type</span>
-          <select className="select" value={kind} onChange={(e) => setKind(e.target.value as typeof kind)}>
+          <select className="select quiet" value={kind} onChange={(e) => setKind(e.target.value as typeof kind)}>
             <option value="all">All types</option>
             {Object.entries(KIND_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
             <option value="altered">Altered only</option>
@@ -48,22 +46,17 @@ export function EvidenceList() {
       </div>
 
       {evidence.loading ? <Loading /> : list.length ? (
-        <div className="list">
+        <div className="rows">
           {list.map((e) => {
             const st = integrity[e.id];
             const bad = st?.state === 'TAMPERED';
-            const fig = e.metrics.savings_kwh ? `${fmtNum(e.metrics.savings_kwh, 0)} kWh saved` : e.metrics.renewable_kwh ? `${fmtNum(e.metrics.renewable_kwh, 0)} kWh renewable` : null;
             return (
-              <a key={e.id} className="record" href={href({ name: 'evidence-item', id: e.id })}>
-                <span className={`dot ${bad ? 'fail' : st?.chain === 'MATCHED' ? 'pass' : st ? 'neutral' : ''}`}>{bad ? <ShieldAlert aria-label="Altered" /> : <ShieldCheck aria-label={st ? 'Intact' : 'Checking'} />}</span>
-                <span className="meta">
+              <a key={e.id} className="row-link" href={href({ name: 'evidence-item', id: e.id })}>
+                <span className="row-main">
                   <b>{e.title}</b>
-                  <small>{KIND_LABEL[e.kind]}{fac(e.facility_id) ? ` · ${fac(e.facility_id)}` : ''} · {e.period_end ? fmtDate(e.period_end) : fmtDate(e.created_at)}</small>
+                  <small>{KIND_LABEL[e.kind]}{fac(e.facility_id) ? ` · ${fac(e.facility_id)}` : ''} · {fmtDate(e.period_end ?? e.created_at)}{usedBy(e.id) ? ` · ${usedBy(e.id)} claim${usedBy(e.id) > 1 ? 's' : ''}` : ''}</small>
                 </span>
-                <span className="num">
-                  {bad ? <span className="chip fail">Altered</span> : <AnchorChip status={e.anchor_status} />}
-                  <small>{fig ?? `${usedBy(e.id)} claim${usedBy(e.id) === 1 ? '' : 's'}`}</small>
-                </span>
+                {bad ? <span className="tag fail">Altered</span> : st ? <span className="tag pass">{st.chain === 'MATCHED' ? 'Verified on-chain' : 'Intact'}</span> : null}
               </a>
             );
           })}

@@ -21,7 +21,7 @@ export function Settings() {
   const admin = can('admin');
   return (
     <>
-      <PageHeader eyebrow="Settings" title="Settings" />
+      <PageHeader title="Settings" />
       <CompanyCard key={m.company_id} admin={admin} />
       <TeamCard admin={admin} />
       <section className="card stack">

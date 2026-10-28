@@ -21,14 +21,14 @@ export const STATUS_LABEL: Record<ClaimStatus, string> = {
 };
 const STATUS_TONE: Record<ClaimStatus, string> = { draft: 'neutral', in_review: 'info', approved: 'pass', rejected: 'fail', published: 'pass' };
 export function StatusChip({ status }: { status: ClaimStatus }) {
-  return <span className={`chip ${STATUS_TONE[status]}`}>{STATUS_LABEL[status]}</span>;
+  return <span className={`tag ${STATUS_TONE[status]}`}>{STATUS_LABEL[status]}</span>;
 }
 
 export const VERDICT_LABEL: Record<Verdict, string> = { SUPPORTED: 'Supported', QUESTIONABLE: 'Questionable', UNSUPPORTED: 'Not supported' };
 export const VERDICT_TONE: Record<Verdict, 'pass' | 'warn' | 'fail'> = { SUPPORTED: 'pass', QUESTIONABLE: 'warn', UNSUPPORTED: 'fail' };
 export function VerdictChip({ verdict }: { verdict?: Verdict | null }) {
-  if (!verdict) return <span className="chip neutral">Not checked</span>;
-  return <span className={`chip ${VERDICT_TONE[verdict]}`}><LevelIcon level={VERDICT_TONE[verdict]} /> {VERDICT_LABEL[verdict]}</span>;
+  if (!verdict) return <span className="tag neutral">Not checked</span>;
+  return <span className={`tag ${VERDICT_TONE[verdict]}`}>{VERDICT_LABEL[verdict]}</span>;
 }
 
 export const CHANNEL_LABEL: Record<ClaimChannel, string> = {
@@ -43,7 +43,7 @@ export function AnchorChip({ status }: { status: AnchorStatus }) {
     ANCHORED: ['pass', 'Anchored on-chain'], SIMULATED: ['warn', 'Not anchored'], PENDING: ['neutral', 'Anchor pending'], NONE: ['neutral', 'Fingerprinted'],
   };
   const [tone, label] = map[status] ?? ['neutral', status];
-  return <span className={`chip ${tone}`}>{label}</span>;
+  return <span className={`tag ${tone}`}>{label}</span>;
 }
 
 export function LevelIcon({ level }: { level: CheckLevel }) {

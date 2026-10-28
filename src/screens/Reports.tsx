@@ -47,17 +47,14 @@ export function Reports() {
 
   return (
     <>
-      <PageHeader eyebrow="Disclosure" title="Reports" actions={<>
+      <PageHeader title="Reports" actions={<>
         <label className="select-inline"><span className="sr-only">Financial year</span>
-          <select className="select" value={fy} onChange={(e) => setFy(e.target.value)}>{years.all.map((y) => <option key={y} value={y}>FY {y}</option>)}</select>
+          <select className="select quiet" value={fy} onChange={(e) => setFy(e.target.value)}>{years.all.map((y) => <option key={y} value={y}>FY {y}</option>)}</select>
         </label>
-        <button className="btn btn-ghost" onClick={exportCsv}><FileDown aria-hidden /> CSV</button>
-        <button className="btn btn-ghost" onClick={exportJson}><FileDown aria-hidden /> JSON</button>
-        <button className="btn btn-primary" onClick={() => window.print()}><Printer aria-hidden /> Print / PDF</button>
-      </>}>
-        Built only from your energy records and fingerprinted evidence. Every figure can be traced.
-      </PageHeader>
+        <button className="btn btn-primary" onClick={() => window.print()}><Printer aria-hidden /> Save as PDF</button>
+      </>} />
 
+      <p className="muted small row" style={{ gap: 14 }}>Also download as <button className="link-btn" onClick={exportCsv}><FileDown size={15} aria-hidden /> CSV</button><button className="link-btn" onClick={exportJson}><FileDown size={15} aria-hidden /> JSON</button></p>
       <article className="report-doc">
         <header className="report-head">
           <div>

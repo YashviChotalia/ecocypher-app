@@ -56,10 +56,9 @@ export function EvidenceItem({ id }: { id: string }) {
       <section className={`verdict ${tone}`}>
         <div className="head">
           <span className="badge"><Icon aria-hidden /></span>
-          <div><span className="eyebrow">{e.ref} · {KIND_LABEL[e.kind]}</span><h1>{headline}</h1></div>
+          <div><h1>{headline}</h1><span className="muted small">{KIND_LABEL[e.kind]} · {e.audited ? 'independently verified' : 'not audited'}</span></div>
         </div>
         <p>{explain}</p>
-        <div className="row"><AnchorChip status={e.anchor_status} /><span className={`chip ${e.audited ? 'pass' : 'neutral'}`}>{e.audited ? 'Independently verified' : 'Not audited'}</span></div>
       </section>
 
       <section className="stack">
@@ -76,8 +75,9 @@ export function EvidenceItem({ id }: { id: string }) {
         {r?.state === 'TAMPERED' && <p className="muted small">These are the figures stored now. They are not verified.</p>}
       </section>
 
-      <section className="card stack">
-        <div className="section-title"><h2>Fingerprint check</h2><span className="eyebrow">SHA-256</span></div>
+      <details className="more card">
+        <summary>Details and fingerprints</summary>
+        <div className="stack" style={{ marginTop: 12 }}>
         <div className={`hashbox ${r && r.computed === e.sha256 ? 'match' : r ? 'mismatch' : ''}`}>
           <span className="label"><span>Recomputed now</span><span>{r ? (r.computed === e.sha256 ? 'Match' : 'No match') : '…'}</span></span>
           <span className="mono">{r?.computed ?? '…'}</span>
@@ -91,9 +91,6 @@ export function EvidenceItem({ id }: { id: string }) {
         )}
         {e.onchain_hash && <div className={`hashbox ${r?.chain === 'MATCHED' ? 'match' : 'mismatch'}`}><span className="label"><span>On-chain (EvidenceRegistry.sol)</span><span>{r?.chain === 'MATCHED' ? 'Match' : 'No match'}</span></span><span className="mono">{e.onchain_hash}</span></div>}
         {e.file_sha256 && <div className="hashbox"><span className="label"><span>File fingerprint{e.file_name ? ` · ${e.file_name}` : ''}</span><span>{fmtBytes(e.file_size)}</span></span><span className="mono">{e.file_sha256}</span></div>}
-      </section>
-
-      <section className="card">
         <dl className="details">
           <dt>Facility</dt><dd>{fac ? `${fac.name}, ${fac.city}` : 'Company-wide'}</dd>
           <dt>Period</dt><dd>{e.period_start ? `${fmtDate(e.period_start)} – ${fmtDate(e.period_end)}` : '—'}</dd>
@@ -101,26 +98,34 @@ export function EvidenceItem({ id }: { id: string }) {
           {e.tx_hash && <><dt>Transaction</dt><dd className="mono">{shortHash(e.tx_hash, 12)}</dd></>}
           {e.notes && <><dt>Notes</dt><dd>{e.notes}</dd></>}
           <dt>Added</dt><dd>{fmtDate(e.created_at)}{e.created_by ? ` by ${e.created_by}` : ''}</dd>
+          <dt>Evidence ID</dt><dd className="mono">{e.ref}</dd>
+          <dt>Anchor</dt><dd><AnchorChip status={e.anchor_status} /></dd>
         </dl>
-      </section>
+        </div>
+      </details>
 
-      <section className="card stack">
-        <div className="section-title"><h2>Used by {usedBy.length} claim{usedBy.length === 1 ? '' : 's'}</h2></div>
-        {usedBy.length ? usedBy.map((c) => (
-          <a key={c.id} className="list-row" href={href({ name: 'claim', id: c.id })}><span className="clamp-2">{c.text}</span><StatusChip status={c.status} /></a>
-        )) : <p className="muted small">Not attached to any claim yet.</p>}
-      </section>
+      {usedBy.length > 0 && (
+        <section className="stack">
+          <h2 className="h2">Used by</h2>
+          <div className="rows">
+            {usedBy.map((c) => <a key={c.id} className="row-link" href={href({ name: 'claim', id: c.id })}><span className="clamp-2">{c.text}</span><StatusChip status={c.status} /></a>)}
+          </div>
+        </section>
+      )}
 
       <div className="row">
         {e.file_path && <button className="btn btn-ghost" onClick={() => void open()}><Download aria-hidden /> Open file</button>}
         <button className="btn btn-ghost" onClick={async () => toast((await copyText(`${e.ref} sha256:${e.sha256}`)) ? 'Fingerprint copied' : 'Copy failed')}>Copy fingerprint</button>
-        {can('admin') && <button className="btn btn-ghost danger-text" disabled={busy} onClick={() => void remove()}><Trash2 aria-hidden /> Delete</button>}
+        {can('admin') && <button className="link-btn quiet-link" disabled={busy} onClick={() => void remove()}><Trash2 size={15} aria-hidden /> Delete</button>}
       </div>
 
-      <section className="card row" style={{ justifyContent: 'center', gap: 20 }}>
-        <div className="qr"><QRCodeSVG value={`${location.origin}/verify/${e.ref}`} size={128} fgColor="#24352D" level="M" /></div>
-        <p className="muted small" style={{ maxWidth: '34ch' }}>Print this code on reports or site boards. Scanning it in EcoCypher opens this evidence and re-runs the fingerprint check.</p>
-      </section>
+      <details className="more">
+        <summary>QR code for reports</summary>
+        <div className="row" style={{ gap: 16, marginTop: 12 }}>
+          <div className="qr"><QRCodeSVG value={`${location.origin}/verify/${e.ref}`} size={120} fgColor="#24352D" level="M" /></div>
+          <p className="muted small" style={{ maxWidth: '34ch' }}>Scanning it opens this evidence and re-runs the fingerprint check.</p>
+        </div>
+      </details>
     </div>
   );
 }
