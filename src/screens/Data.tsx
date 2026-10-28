@@ -16,7 +16,7 @@ export function Data() {
   const { facilities, energy, evidence } = useWorkspaceData();
   const years = useFinancialYears(energy.data);
   const [fyPick, setFy] = useState<string>();
-  const fy = fyPick ?? years.all[0];
+  const fy = fyPick ?? years.defaultFy;
   const [fac, setFac] = useState<string>('all');
   const [draft, setDraft] = useState<Draft | null>(null);
   const [facDraft, setFacDraft] = useState<Partial<Facility> | null>(null);
@@ -103,84 +103,108 @@ export function Data() {
   if (facilities.loading || energy.loading) return <Loading />;
   const write = can('write');
 
+  const months = [...new Set(rows.map((r) => r.month))].sort().reverse();
+  const template = () => download('energy-template.csv', toCsv([['facility', 'month', 'grid_kwh', 'renewable_kwh', 'diesel_l', 'lpg_kg'], [facilities.data?.[0]?.name ?? 'Plant A', '2026-09', 410000, 0, 2400, 0]]));
+
   return (
     <>
-      <PageHeader title="Energy data" actions={write && (
-        <>
-          <label className="btn btn-ghost" style={{ cursor: 'pointer' }}><Upload aria-hidden /> Import<input type="file" accept=".csv,text/csv" className="sr-only" onChange={(e) => { void importCsv(e.target.files?.[0]); e.target.value = ''; }} /></label>
-          <button className="btn btn-primary" onClick={openNew} disabled={!facilities.data?.length}><Plus aria-hidden /> Add month</button>
-        </>
-      )} />
+      <PageHeader title="Energy" actions={write && facilities.data?.length ? (
+        <button className="btn btn-primary" onClick={openNew}><Plus aria-hidden /> Add month</button>
+      ) : undefined} />
       <ErrorNote error={facilities.error || energy.error} />
 
-      <section className="stack">
-        <div className="section-title"><h2>Facilities</h2>{write && <button className="link-btn" onClick={() => setFacDraft({})}><Plus size={16} aria-hidden /> Add facility</button>}</div>
-        {facilities.data?.length ? (
-          <div className="fac-grid">
-            {facilities.data.map((f) => {
-              const ft = totals((energy.data ?? []).filter((r) => r.facility_id === f.id && (!fy || fyMonths(fy).includes(r.month))), m.company);
-              return (
-                <button key={f.id} className={`fac ${fac === f.id ? 'active' : ''}`} onClick={() => setFac(fac === f.id ? 'all' : f.id)} aria-pressed={fac === f.id}>
-                  <span className="row" style={{ justifyContent: 'space-between', width: '100%' }}>
-                    <b>{f.name}</b>
-                    {write && <span className="icon-sm" role="button" tabIndex={0} aria-label={`Edit ${f.name}`} onClick={(e) => { e.stopPropagation(); setFacDraft(f); }} onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); setFacDraft(f); } }}><Pencil size={14} aria-hidden /></span>}
-                  </span>
-                  <small>{f.city}{f.kind ? ` · ${f.kind}` : ''}</small>
-                  <span className="fac-num">{fmtNum(ft.scope1_t + ft.scope2_t, 0)} tCO₂e <small>FY {fy ?? '—'}</small></span>
-                </button>
-              );
-            })}
+      {!facilities.data?.length ? (
+        <Empty icon={<Building2 aria-hidden />} title="Add your first facility" action={write ? <button className="btn btn-primary" onClick={() => setFacDraft({})}>Add facility</button> : undefined}>
+          Plants, offices and warehouses whose energy you report.
+        </Empty>
+      ) : (
+        <>
+          <div className="filters">
+            <select className="select quiet" aria-label="Financial year" value={fy} onChange={(e) => setFy(e.target.value)}>
+              {years.all.map((y) => <option key={y} value={y}>FY {y}</option>)}
+              {!years.all.length && <option>No data yet</option>}
+            </select>
+            <select className="select quiet" aria-label="Facility" value={fac} onChange={(e) => setFac(e.target.value)}>
+              <option value="all">All facilities</option>
+              {facilities.data.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
+            </select>
           </div>
-        ) : (
-          <Empty icon={<Building2 aria-hidden />} title="Add your first facility" action={write ? <button className="btn btn-primary" onClick={() => setFacDraft({})}>Add facility</button> : undefined}>
-            Plants, offices and warehouses whose energy you report.
-          </Empty>
-        )}
-      </section>
 
-      {facilities.data?.length ? (
-        <section className="card stack">
-          <div className="toolbar">
-            <label className="select-inline"><span className="sr-only">Financial year</span>
-              <select className="select" value={fy} onChange={(e) => setFy(e.target.value)}>
-                {years.all.map((y) => <option key={y} value={y}>FY {y}</option>)}
-                {!years.all.length && <option>No data yet</option>}
-              </select>
-            </label>
-            <label className="select-inline"><span className="sr-only">Facility</span>
-              <select className="select" value={fac} onChange={(e) => setFac(e.target.value)}>
-                <option value="all">All facilities</option>
-                {facilities.data.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
-              </select>
-            </label>
-            <button className="link-btn" onClick={() => download('energy-template.csv', toCsv([['facility', 'month', 'grid_kwh', 'renewable_kwh', 'diesel_l', 'lpg_kg'], [facilities.data![0].name, '2026-09', 410000, 0, 2400, 0]]))}>CSV template</button>
-          </div>
-          <div className="summary-strip">
-            <span><small>Grid electricity</small><b>{fmtNum(t.grid_kwh, 0)} kWh</b></span>
-            <span><small>Renewable</small><b>{fmtNum(t.renewable_kwh, 0)} kWh</b></span>
-            <span><small>Scope 1</small><b>{fmtNum(t.scope1_t, 1)} t</b></span>
-            <span><small>Scope 2</small><b>{fmtNum(t.scope2_t, 1)} t</b></span>
-          </div>
-          {rows.length ? (
-            <div className="table-wrap">
-              <table className="table">
-                <thead><tr><th>Month</th><th>Facility</th><th className="num">Grid kWh</th><th className="num">Renewable kWh</th><th className="num">Diesel L</th><th className="num">LPG kg</th><th>Evidence</th>{write && <th><span className="sr-only">Edit</span></th>}</tr></thead>
-                <tbody>
-                  {rows.map((r) => (
-                    <tr key={r.id}>
-                      <td>{fmtMonth(r.month)}</td><td>{facName(r.facility_id)}</td>
-                      <td className="num">{fmtNum(r.grid_kwh, 0)}</td><td className="num">{fmtNum(r.renewable_kwh, 0)}</td>
-                      <td className="num">{fmtNum(r.diesel_l, 0)}</td><td className="num">{fmtNum(r.lpg_kg, 0)}</td>
-                      <td>{r.evidence_id ? <span className="chip pass">Linked</span> : <span className="chip neutral">None</span>}</td>
-                      {write && <td><button className="icon-btn sm" onClick={() => openEdit(r)} aria-label={`Edit ${facName(r.facility_id)} ${fmtMonth(r.month)}`}><Pencil aria-hidden /></button></td>}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          <dl className="stats four">
+            <div><dt>Grid electricity</dt><dd>{fmtNum(t.grid_kwh, 0)} <small>kWh</small></dd></div>
+            <div><dt>Renewable</dt><dd>{fmtNum(t.renewable_kwh, 0)} <small>kWh</small></dd></div>
+            <div><dt>Scope 1</dt><dd>{fmtNum(t.scope1_t, 1)} <small>t</small></dd></div>
+            <div><dt>Scope 2</dt><dd>{fmtNum(t.scope2_t, 1)} <small>t</small></dd></div>
+          </dl>
+
+          <section className="stack">
+            <h2 className="h2">By month</h2>
+            {months.length ? (
+              <div className="rows">
+                {months.map((mo, i) => {
+                  const recs = rows.filter((r) => r.month === mo);
+                  const mt = totals(recs, m.company);
+                  return (
+                    <details key={mo} className="month" open={i === 0}>
+                      <summary>
+                        <span className="row-main">
+                          <b>{fmtMonth(mo)}</b>
+                          <small>{fmtNum(mt.grid_kwh + mt.renewable_kwh, 0)} kWh electricity{mt.renewable_kwh ? ` · ${fmtNum((mt.renewable_kwh / (mt.grid_kwh + mt.renewable_kwh)) * 100, 0)}% renewable` : ''}</small>
+                        </span>
+                        <span className="month-total">{fmtNum(mt.scope1_t + mt.scope2_t, 1)} <small>tCO₂e</small></span>
+                      </summary>
+                      <ul className="entries">
+                        {recs.map((r) => (
+                          <li key={r.id}>
+                            <div className="entry-head">
+                              <span className="row-main">
+                                <b>{facName(r.facility_id)}</b>
+                                {r.evidence_id ? <span className="tag pass">Evidence linked</span> : <span className="tag neutral">No evidence</span>}
+                              </span>
+                              {write && <button className="icon-btn sm" onClick={() => openEdit(r)} aria-label={`Edit ${facName(r.facility_id)} ${fmtMonth(r.month)}`}><Pencil aria-hidden /></button>}
+                            </div>
+                            <dl className="entry-vals">
+                              <div><dt>Grid</dt><dd>{fmtNum(r.grid_kwh, 0)} kWh</dd></div>
+                              <div><dt>Renewable</dt><dd>{fmtNum(r.renewable_kwh, 0)} kWh</dd></div>
+                              <div><dt>Diesel</dt><dd>{fmtNum(r.diesel_l, 0)} L</dd></div>
+                              <div><dt>LPG</dt><dd>{fmtNum(r.lpg_kg, 0)} kg</dd></div>
+                            </dl>
+                          </li>
+                        ))}
+                      </ul>
+                    </details>
+                  );
+                })}
+              </div>
+            ) : <p className="muted">No records for this selection.</p>}
+          </section>
+
+          <section className="stack">
+            <div className="section-title"><h2>Facilities</h2>{write && <button className="link-btn" onClick={() => setFacDraft({})}><Plus size={16} aria-hidden /> Add</button>}</div>
+            <div className="rows">
+              {facilities.data.map((f) => {
+                const ft = totals((energy.data ?? []).filter((r) => r.facility_id === f.id && (!fy || fyMonths(fy).includes(r.month))), m.company);
+                return (
+                  <div key={f.id} className="row-link">
+                    <span className="row-main"><b>{f.name}</b><small>{f.city}{f.kind ? ` · ${f.kind}` : ''}</small></span>
+                    <span className="row" style={{ gap: 8, flexWrap: 'nowrap' }}>
+                      <span className="month-total">{fmtNum(ft.scope1_t + ft.scope2_t, 0)} <small>t</small></span>
+                      {write && <button className="icon-btn sm" onClick={() => setFacDraft(f)} aria-label={`Edit ${f.name}`}><Pencil aria-hidden /></button>}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
-          ) : <p className="muted">No records for this selection.</p>}
-        </section>
-      ) : null}
+          </section>
+
+          {write && (
+            <p className="muted small row" style={{ gap: 14 }}>
+              <label className="link-btn" style={{ cursor: 'pointer' }}><Upload size={15} aria-hidden /> Import CSV<input type="file" accept=".csv,text/csv" className="sr-only" onChange={(e) => { void importCsv(e.target.files?.[0]); e.target.value = ''; }} /></label>
+              <button className="link-btn quiet-link" onClick={template}>Download template</button>
+            </p>
+          )}
+        </>
+      )}
 
       <Sheet title={draft?.id ? 'Edit month' : 'Add a month of data'} open={!!draft} onClose={() => setDraft(null)} footer={<>
         {draft?.id && <button className="btn btn-ghost danger-text" onClick={() => void removeRecord()} disabled={busy}><Trash2 aria-hidden /> Delete</button>}

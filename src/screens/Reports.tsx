@@ -19,7 +19,8 @@ export function Reports() {
   const data = useMemo(() => {
     if (!energy.data || !fy) return null;
     const pick = (f: string) => { const s = new Set(fyMonths(f)); return totals(energy.data!.filter((r) => s.has(r.month)), m.company); };
-    return { now: pick(fy), prev: pick(prevFy(fy)) };
+    const ms = new Set(fyMonths(fy));
+    return { now: pick(fy), prev: pick(prevFy(fy)), months: new Set(energy.data.filter((r) => ms.has(r.month)).map((r) => r.month)).size };
   }, [energy.data, fy, m.company]);
 
   if (energy.loading || evidence.loading || claims.loading) return <Loading />;
@@ -67,16 +68,16 @@ export function Reports() {
 
         <section className="stack">
           <h3>BRSR Section C, Principle 6: energy and emissions</h3>
-          {data.now.records < 12 * 1 && <p className="note warn small">FY {fy} has only {data.now.records} monthly records. Figures are partial.</p>}
-          <div className="table-wrap">
-            <table className="table">
-              <thead><tr><th>Parameter</th><th className="num">FY {fy}</th><th className="num">FY {prevFy(fy)}</th><th>Unit</th></tr></thead>
-              <tbody>
-                {rows.map((r) => (
-                  <tr key={r.label} className={r.strong ? 'strong' : ''}><td>{r.label}</td><td className="num">{r.now == null ? '—' : fmtNum(r.now, r.digits ?? 0)}</td><td className="num">{r.prev == null ? '—' : fmtNum(r.prev, r.digits ?? 0)}</td><td>{r.unit}</td></tr>
-                ))}
-              </tbody>
-            </table>
+          {data.months < 12 && <p className="note warn small">FY {fy} has data for {data.months} of 12 months, so these figures are partial.</p>}
+          <div className="figs">
+            <div className="figs-head" aria-hidden><span /><span>FY {fy}</span><span>FY {prevFy(fy)}</span></div>
+            {rows.map((r) => (
+              <div key={r.label} className={`fig ${r.strong ? 'strong' : ''}`}>
+                <span className="fig-label">{r.label}</span>
+                <span className="fig-val"><small>FY {fy}</small><span>{r.now == null ? '—' : fmtNum(r.now, r.digits ?? 0)} <em>{r.unit}</em></span></span>
+                <span className="fig-val prev"><small>FY {prevFy(fy)}</small><span>{r.prev == null ? '—' : fmtNum(r.prev, r.digits ?? 0)} <em>{r.unit}</em></span></span>
+              </div>
+            ))}
           </div>
           <p className="muted small">
             Energy content: electricity 0.0036 GJ/kWh; diesel 0.0358 GJ/L; LPG 0.0473 GJ/kg (IPCC 2006). Emission factors: grid {m.company.grid_ef} kg CO₂e/kWh ({FACTOR_SOURCES.grid_ef}); diesel {m.company.diesel_ef} kg/L; LPG {m.company.lpg_ef} kg/kg.
@@ -87,29 +88,31 @@ export function Reports() {
         <section className="stack">
           <h3>Environmental claims approved for publication</h3>
           {fyClaims.length ? (
-            <div className="table-wrap">
-              <table className="table">
-                <thead><tr><th>Claim</th><th>Channel</th><th>Status</th><th>Evidence check</th></tr></thead>
-                <tbody>{fyClaims.map((c) => (
-                  <tr key={c.id}><td style={{ minWidth: 240 }}>{c.text}</td><td>{CHANNEL_LABEL[c.channel]}</td><td><StatusChip status={c.status} /></td><td><VerdictChip verdict={reports[c.id]?.verdict} /></td></tr>
-                ))}</tbody>
-              </table>
-            </div>
+            <ul className="plain-list">
+              {fyClaims.map((c) => (
+                <li key={c.id}>
+                  <span>{c.text}</span>
+                  <span className="claim-meta"><StatusChip status={c.status} /><VerdictChip verdict={reports[c.id]?.verdict} /><span className="muted">{CHANNEL_LABEL[c.channel]}</span></span>
+                </li>
+              ))}
+            </ul>
           ) : <p className="muted small">No approved claims.</p>}
         </section>
 
         <section className="stack">
           <h3>Evidence index</h3>
           <p className="small">{ev.length} items · {intact} intact · {altered.length} altered{altered.length ? ` (${altered.map((e) => e.ref).join(', ')})` : ''}</p>
-          <div className="table-wrap">
-            <table className="table">
-              <thead><tr><th>ID</th><th>Evidence</th><th>Type</th><th>SHA-256</th><th>Integrity</th></tr></thead>
-              <tbody>{ev.map((e) => (
-                <tr key={e.id}><td className="mono">{e.ref}</td><td>{e.title}</td><td>{KIND_LABEL[e.kind]}</td><td className="mono">{shortHash(e.sha256, 8)}</td>
-                  <td>{integrity[e.id]?.state === 'TAMPERED' ? <span className="chip fail">Altered</span> : integrity[e.id] ? <span className="chip pass">{e.anchor_status === 'ANCHORED' ? 'Intact, anchored' : 'Intact'}</span> : '…'}</td></tr>
-              ))}</tbody>
-            </table>
-          </div>
+          <ul className="plain-list">
+            {ev.map((e) => (
+              <li key={e.id}>
+                <span className="row" style={{ justifyContent: 'space-between', gap: 10, flexWrap: 'nowrap' }}>
+                  <span>{e.title}</span>
+                  {integrity[e.id]?.state === 'TAMPERED' ? <span className="tag fail">Altered</span> : integrity[e.id] ? <span className="tag pass">{e.anchor_status === 'ANCHORED' ? 'Intact, anchored' : 'Intact'}</span> : null}
+                </span>
+                <small className="muted mono-sm">{e.ref} · {KIND_LABEL[e.kind]} · sha256 {shortHash(e.sha256, 8)}</small>
+              </li>
+            ))}
+          </ul>
         </section>
       </article>
     </>

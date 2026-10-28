@@ -670,3 +670,72 @@ details.more.card > summary { width: 100%; }
 .metrics .metric { background: transparent; border: 0; border-radius: 0; padding: 12px 12px 0 0; }
 @media (max-width: 639px) { .metrics .metric:nth-child(n+3) { border-top: 1px solid var(--line); margin-top: 12px; } }
 .metric b { font-size: 1.1rem; font-weight: 600; }
+
+/* ── Energy & reports without sideways scrolling ───────────────────────── */
+.filters { display: flex; gap: 8px; flex-wrap: wrap; }
+.filters .select { flex: 0 1 auto; max-width: 100%; }
+.stats.four { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 14px; }
+.stats.four > div { padding: 14px 12px 0 0; }
+.stats.four > div:nth-child(2n) { padding-left: 14px; border-left: 1px solid var(--line); }
+.stats.four > div:nth-child(2n+1) { padding-left: 0; border-left: 0; }
+@media (min-width: 640px) {
+  .stats.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .stats.four > div + div { padding-left: 14px; border-left: 1px solid var(--line); }
+}
+.stats dd small { font-size: 0.78rem; color: var(--text-3); font-weight: 500; }
+
+details.month > summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; }
+details.month > summary::-webkit-details-marker { display: none; }
+details.month > summary:hover { background: var(--surface-2); }
+details.month > summary .row-main b::after { content: ' ›'; color: var(--text-3); display: inline-block; transition: transform 0.15s; }
+details.month[open] > summary .row-main b::after { transform: rotate(90deg); }
+.month-total { font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.month-total small { color: var(--text-3); font-weight: 500; font-size: 0.78rem; }
+.entries { list-style: none; margin: 0; padding: 0 16px 8px; display: grid; }
+.entries li { padding: 12px 0; border-top: 1px dashed var(--line); display: grid; gap: 8px; }
+.entry-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.entry-head b { font-weight: 600; font-size: 0.92rem; margin-right: auto; }
+.entry-vals { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 16px; margin: 0; }
+@media (min-width: 640px) { .entry-vals { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.entry-vals div { display: grid; min-width: 0; }
+.entry-vals dt { font-size: 0.75rem; color: var(--text-3); }
+.entry-vals dd { margin: 0; font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+
+/* Report figures: label + two years, stacked on phones */
+.figs { display: grid; border-top: 1px solid var(--line); }
+.figs-head { display: none; }
+.fig { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.fig-label { grid-column: 1 / -1; font-size: 0.9rem; color: var(--text-2); }
+.fig-val { font-variant-numeric: tabular-nums; font-size: 0.95rem; display: grid; }
+.fig-val small { font-size: 0.72rem; color: var(--text-3); }
+.fig-val em { font-style: normal; font-size: 0.78rem; color: var(--text-3); }
+.fig-val.prev { color: var(--text-2); }
+.fig.strong .fig-label, .fig.strong .fig-val:not(.prev) { font-weight: 600; color: var(--text); }
+@media (min-width: 720px) {
+  .figs-head, .fig { grid-template-columns: minmax(0, 1fr) 170px 170px; align-items: baseline; }
+  .figs-head { display: grid; gap: 16px; padding: 8px 0; font-size: 0.75rem; color: var(--text-3); border-bottom: 1px solid var(--line); text-align: right; }
+  .fig-label { grid-column: auto; }
+  .fig-val { display: block; text-align: right; }
+  .fig-val small { display: none; }
+}
+.plain-list { list-style: none; margin: 0; padding: 0; display: grid; border-top: 1px solid var(--line); }
+.plain-list li { display: grid; gap: 6px; padding: 12px 0; border-bottom: 1px solid var(--line); font-size: 0.92rem; min-width: 0; }
+.plain-list li > span:first-child { overflow-wrap: anywhere; }
+.mono-sm { font-family: var(--font-mono); font-size: 0.74rem; overflow-wrap: anywhere; }
+.report-doc { gap: 30px; }
+.report-doc h3 { font-size: 0.98rem; font-weight: 600; }
+@media (max-width: 639px) { .report-doc { padding: 18px 16px; } .report-head h2 { font-size: 1.3rem; } }
+@media print {
+  .figs-head, .fig { grid-template-columns: minmax(0, 1fr) 130px 130px; }
+  .figs-head { display: grid; text-align: right; font-size: 8.5pt; }
+  .fig-label { grid-column: auto; }
+  .fig-val { display: block; text-align: right; }
+  .fig-val small { display: none; }
+  details.month { break-inside: avoid; }
+}
+.entry-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; }
+.entry-head .row-main { gap: 3px; }
+.entry-head .row-main b { font-size: 0.92rem; }
+.entry-head .tag { font-size: 0.75rem; }
+.fig-val > span { white-space: nowrap; }
+@media (min-width: 720px) { .figs-head, .fig { grid-template-columns: minmax(0, 1fr) 190px 190px; } }
