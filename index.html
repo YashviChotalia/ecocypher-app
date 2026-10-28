@@ -48,9 +48,8 @@
     </div>
     <script>
       (function () {
-        var t0 = Date.now(), seen = false;
-        try { seen = sessionStorage.getItem('ec-splash') === '1'; sessionStorage.setItem('ec-splash', '1'); } catch (e) {}
-        var min = seen ? 250 : 1400; // full splash once per visit, a quick fade after that
+        var t0 = Date.now();
+        var min = 1600; // the splash always shows in full, every time the app opens
         try {
           var p = localStorage.getItem('ecocypher-theme-v2');
           if (p === 'dark' || (p === 'system' && matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.classList.add('sp-dark');
