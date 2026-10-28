@@ -1,7 +1,7 @@
 {
   "name": "ecocypher-esg",
   "private": true,
-  "version": "2.1.0",
+  "version": "2.1.1",
   "type": "module",
   "description": "EcoCypher ESG workspace: evidence-backed green claims, emissions and BRSR reporting for company ESG teams.",
   "scripts": {

@@ -29,7 +29,7 @@ export function LoadCurve({ hours }: { hours: HourResult[] }) {
   const [table, setTable] = useState(false);
   const id = useId();
   const [ref, W] = useWidth();
-  const H = 270, padB = 46;
+  const H = 250, padB = 40;
   const n = hours.length;
   const top = nice(Math.max(220, ...hours.map((h) => h.predicted_kw)) * 1.05, 50);
   const step = (W - padL - padR) / Math.max(1, n);
@@ -44,11 +44,12 @@ export function LoadCurve({ hours }: { hours: HourResult[] }) {
   return (
     <figure className="chart" aria-labelledby={`${id}-t`}>
       <figcaption className="chart-head">
-        <span id={`${id}-t`} className="chart-title">Predicted demand, next {n} hours</span>
+        <span id={`${id}-t`} className="chart-title">Demand <small className="muted">kW</small></span>
         <span className="legend">
-          <span><i style={{ ['--c' as string]: 'var(--mode-batt)' }} />Battery storage</span>
-          <span><i style={{ ['--c' as string]: 'var(--mode-grid)' }} />Main grid</span>
+          <span><i style={{ ['--c' as string]: 'var(--mode-batt)' }} />Battery</span>
+          <span><i style={{ ['--c' as string]: 'var(--mode-grid)' }} />Grid</span>
           <span><i className="ring" />Overload</span>
+          <span><i className="band" />18–22h</span>
         </span>
         <button className="link-btn" onClick={() => setTable((t) => !t)} aria-pressed={table}>{table ? 'Chart' : 'Table'}</button>
       </figcaption>
@@ -75,16 +76,16 @@ export function LoadCurve({ hours }: { hours: HourResult[] }) {
             ))}
             <line x1={padL} x2={W - padR} y1={y(DEMAND_THRESHOLD_KW)} y2={y(DEMAND_THRESHOLD_KW)} className="thr thr-switch" />
             <line x1={padL} x2={W - padR} y1={y(OVERLOAD_KW)} y2={y(OVERLOAD_KW)} className="thr thr-over" />
-            <text x={padL + 4} y={y(DEMAND_THRESHOLD_KW) + 13} className="thr-label">160 kW switch</text>
-            <text x={padL + 4} y={y(OVERLOAD_KW) - 5} className="thr-label over">200 kW overload</text>
+            <text x={padL + 4} y={y(DEMAND_THRESHOLD_KW) + 13} className="thr-label">160</text>
+            <text x={padL + 4} y={y(OVERLOAD_KW) - 5} className="thr-label over">200 overload</text>
             <path d={area} className="load-area" />
             <path d={line} className="load-line" />
             {hours.map((h, i) => (
               <g key={h.timestamp} onMouseEnter={() => setHover(i)} onFocus={() => setHover(i)} onClick={() => setHover(i)} tabIndex={0} className="col">
                 <rect x={x(i) - step / 2} y={padT} width={step} height={H - padT} className="hit" />
                 {hover === i && <line x1={x(i)} x2={x(i)} y1={padT} y2={base} className="cursor" />}
-                <circle cx={x(i)} cy={y(h.predicted_kw)} r={hover === i ? 5.5 : 4} className={`pt ${h.grid_mode === 'RENEWABLE_STORAGE' ? 'batt' : 'gridm'}${h.overload_alert ? ' over' : ''}`} />
-                <rect x={x(i) - step / 2 + 1} y={base + 6} width={step - 2} height={8} rx={2} className={`strip ${h.grid_mode === 'RENEWABLE_STORAGE' ? 'batt' : 'gridm'}`} />
+                <circle cx={x(i)} cy={y(h.predicted_kw)} r={hover === i ? 5 : 3.2} className={`pt ${h.grid_mode === 'RENEWABLE_STORAGE' ? 'batt' : 'gridm'}${h.overload_alert ? ' over' : ''}`} />
+                <rect x={x(i) - step / 2 + 1} y={base + 5} width={Math.max(1, step - 2)} height={4} rx={2} className={`strip ${h.grid_mode === 'RENEWABLE_STORAGE' ? 'batt' : 'gridm'}`} />
                 {i % every === 0 && <text x={x(i)} y={H - 10} textAnchor="middle" className="tick">{hh(h.timestamp)}</text>}
               </g>
             ))}
@@ -100,7 +101,6 @@ export function LoadCurve({ hours }: { hours: HourResult[] }) {
           )}
         </div>
       )}
-      <p className="chart-foot muted">Shaded hours are the 18:00–22:00 evening window. The strip under the axis shows the power source each hour.</p>
     </figure>
   );
 }
@@ -109,7 +109,7 @@ export function LoadCurve({ hours }: { hours: HourResult[] }) {
 export function SocChart({ hours, reserve }: { hours: HourResult[]; reserve: number }) {
   const [hover, setHover] = useState<number | null>(null);
   const [ref, W] = useWidth();
-  const H = 170, padB = 26;
+  const H = 150, padB = 24;
   const n = hours.length;
   const step = (W - padL - padR) / Math.max(1, n);
   const x = (i: number) => padL + step * i + step / 2;
@@ -120,14 +120,14 @@ export function SocChart({ hours, reserve }: { hours: HourResult[]; reserve: num
   const every = W < 480 ? (n > 16 ? 3 : n > 8 ? 2 : 1) : n > 16 ? 2 : 1;
   return (
     <figure className="chart">
-      <figcaption className="chart-head"><span className="chart-title">Battery state of charge</span></figcaption>
+      <figcaption className="chart-head"><span className="chart-title">Battery charge <small className="muted">%</small></span></figcaption>
       <div ref={ref} className="chart-plot soc-plot" onMouseLeave={() => setHover(null)}>
         <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`Battery state of charge from ${fmtNum(pts[0].v, 0)}% to ${fmtNum(pts[pts.length - 1].v, 0)}%`} width={W} height={H}>
           {[0, 25, 50, 75, 100].map((t) => (
-            <g key={t}><line x1={padL} x2={W - padR} y1={y(t)} y2={y(t)} className="grid" /><text x={padL - 6} y={y(t) + 4} textAnchor="end" className="tick">{t}%</text></g>
+            <g key={t}><line x1={padL} x2={W - padR} y1={y(t)} y2={y(t)} className="grid" /><text x={padL - 6} y={y(t) + 4} textAnchor="end" className="tick">{t}</text></g>
           ))}
           <line x1={padL} x2={W - padR} y1={y(reserve)} y2={y(reserve)} className="thr thr-over" />
-          <text x={W - padR} y={y(reserve) - 4} textAnchor="end" className="thr-label over">reserve {reserve}%</text>
+          <text x={padL + 4} y={y(reserve) - 5} className="thr-label over">reserve</text>
           <path d={area} className="soc-area" />
           <path d={line} className="soc-line" />
           {hours.map((h, i) => (
