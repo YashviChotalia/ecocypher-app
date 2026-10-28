@@ -1,0 +1,4 @@
+out/
+assets/www/
+*.keystore
+.android-fix.tgz

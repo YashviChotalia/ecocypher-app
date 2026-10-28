@@ -107,7 +107,7 @@ main.content {
 
 .tabbar {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
-  display: grid; grid-template-columns: repeat(5, 1fr);
+  display: grid; grid-template-columns: repeat(6, 1fr);
   padding: 6px max(8px, env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
   background: color-mix(in srgb, var(--surface) 92%, transparent);
   backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
@@ -739,3 +739,68 @@ details.month[open] > summary .row-main b::after { transform: rotate(90deg); }
 .entry-head .tag { font-size: 0.75rem; }
 .fig-val > span { white-space: nowrap; }
 @media (min-width: 720px) { .figs-head, .fig { grid-template-columns: minmax(0, 1fr) 190px 190px; } }
+
+/* ── Microgrid (HackSphere 3.0) ─────────────────────────────────────────── */
+:root { --mode-batt: #1F7A55; --mode-grid: #4E6F92; }
+:root[data-ec-theme='dark'] { --mode-batt: #3FA77B; --mode-grid: #7C9CC0; }
+.small { font-size: 0.82rem; }
+.field { display: grid; gap: 6px; font-size: 0.85rem; font-weight: 600; min-width: 0; }
+.field-inline { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 0.88rem; font-weight: 600; }
+.field-inline .input, .field-inline .select { width: auto; }
+.batt-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (min-width: 720px) { .batt-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.form-grid { max-height: 360px; overflow: auto; }
+.form-grid th { position: sticky; top: 0; z-index: 1; }
+.form-grid td { padding: 4px 8px; }
+.cell { width: 76px; text-align: right; font: inherit; font-variant-numeric: tabular-nums; padding: 7px 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--text); }
+.cell:focus { outline: none; border-color: var(--forest); box-shadow: 0 0 0 3px var(--pass-bg); }
+.banner.critical { background: var(--fail-bg); border: 1px solid color-mix(in srgb, var(--vermilion) 40%, transparent); animation: pulse-crit 2.4s ease-in-out 3; }
+@keyframes pulse-crit { 50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--vermilion) 18%, transparent); } }
+.grid-status { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.source-badge { display: flex; align-items: center; gap: 12px; padding: 12px 16px 12px 12px; border-radius: 14px; color: #fff; }
+.source-badge.batt { background: var(--mode-batt); }
+.source-badge.gridm { background: var(--mode-grid); }
+.source-badge svg { width: 30px; height: 30px; padding: 6px; border-radius: 10px; background: rgba(255,255,255,.18); box-sizing: content-box; }
+.source-badge small { display: block; font-size: 0.72rem; opacity: 0.85; letter-spacing: 0.04em; text-transform: uppercase; font-weight: 600; }
+.source-badge b { font-size: 1.15rem; }
+:root[data-ec-theme='dark'] .source-badge { color: #0F1A15; }
+:root[data-ec-theme='dark'] .source-badge svg { background: rgba(0,0,0,.12); }
+.grid-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (min-width: 720px) { .grid-kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.kpi b.bad { color: var(--vermilion); }
+.grid-plot svg { height: 270px; }
+.soc-plot svg { height: 170px; }
+.chart .peak-band { fill: var(--warn-bg); opacity: 0.7; }
+.chart .thr { stroke-width: 1.5; stroke-dasharray: 5 4; vector-effect: non-scaling-stroke; }
+.chart .thr-switch { stroke: var(--gold-ink); }
+.chart .thr-over { stroke: var(--vermilion); }
+.chart .thr-label { fill: var(--gold-ink); font-size: 10.5px; font-weight: 600; font-family: var(--font-body); }
+.chart .thr-label.over { fill: var(--vermilion); }
+.chart .load-line, .chart .soc-line { fill: none; stroke: var(--text-2); stroke-width: 2; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
+.chart .soc-line { stroke: var(--mode-batt); }
+.chart .load-area { fill: var(--text-2); opacity: 0.06; }
+.chart .soc-area { fill: var(--mode-batt); opacity: 0.12; }
+.chart .pt { stroke: var(--surface); stroke-width: 1.5; }
+.chart .pt.batt, .chart .strip.batt { fill: var(--mode-batt); }
+.chart .pt.gridm, .chart .strip.gridm { fill: var(--mode-grid); }
+.chart .pt.over { stroke: var(--vermilion); stroke-width: 2.5; }
+.chart .cursor { stroke: var(--line-strong); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.legend i.ring { background: transparent; border: 2px solid var(--vermilion); border-radius: 50%; width: 9px; height: 9px; }
+.chart-foot { font-size: 0.78rem; margin: 0; }
+.signal-row { display: flex; align-items: center; gap: 12px; padding: 12px 16px; min-width: 0; }
+.sig { font-family: var(--font-mono); font-size: 0.8rem; font-weight: 600; padding: 4px 8px; border-radius: 8px; color: #fff; flex: none; }
+.sig.batt { background: var(--mode-batt); }
+.sig.gridm { background: var(--mode-grid); }
+.sig-body { display: grid; gap: 2px; min-width: 0; text-align: left; }
+.sig-body b { font-size: 0.9rem; overflow-wrap: anywhere; }
+.sig-body small { color: var(--text-3); font-size: 0.8rem; }
+.log-row { width: 100%; border: 0; background: transparent; cursor: pointer; font: inherit; color: inherit; }
+.log-row[aria-current='true'] { background: var(--pass-bg); }
+.table tr.over-row td { background: var(--fail-bg); }
+.segmented.seg-full { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-flow: row; width: 100%; }
+.segmented.seg-full button { justify-content: center; padding: 8px 6px; }
+.grid-plot svg, .soc-plot svg { width: 100%; }
+.chart .thr-label { paint-order: stroke; stroke: var(--surface); stroke-width: 3px; stroke-linejoin: round; }
+.mg-dash-link { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow); }
+.mg-dash-link .row { gap: 12px; align-items: center; flex-wrap: nowrap; }
+.mg-dash-link svg { color: var(--forest); flex: none; }

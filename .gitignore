@@ -6,3 +6,8 @@ dist
 .env*
 !.env.example
 *.tsbuildinfo
+EcoCypher.apk
+.src-bundle.tgz
+.android-wrapper.tgz.bak
+.android-fix.tgz
+.hacksphere-update.tgz

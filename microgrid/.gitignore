@@ -1,0 +1,5 @@
+appsail/static/
+__pycache__/
+.env
+predictions.csv
+.pytest_cache/

@@ -1,0 +1,45 @@
+{
+ "type": "linear_regression",
+ "features": [
+  "hour",
+  "day_of_week",
+  "is_weekend",
+  "ambient_temp_c",
+  "humidity_pct",
+  "solar_irradiance_wm2",
+  "cooling_degree_c",
+  "heating_degree_c",
+  "is_night",
+  "is_morning_ramp",
+  "is_morning_peak",
+  "is_evening_peak",
+  "is_late_evening",
+  "hour_sin",
+  "hour_cos"
+ ],
+ "intercept": 145.42623657571153,
+ "coef": [
+  0.04750726948323672,
+  0.009730182613826077,
+  -0.30414760763922444,
+  -0.08019112092008658,
+  -0.01866047609019495,
+  0.0020973400374436207,
+  8.674841040645866,
+  -0.20094445307294068,
+  -52.402145854532826,
+  -9.910326327351788,
+  30.481064741633027,
+  54.460793493438494,
+  -33.508848459999555,
+  -0.21719111176555378,
+  -0.22147472341365723
+ ],
+ "train_rows": 4000,
+ "holdout_rmse_kw": 8.297578671789356,
+ "residual_std_kw": 8.509310436972747,
+ "clip": [
+  25.55,
+  459.495
+ ]
+}

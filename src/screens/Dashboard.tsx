@@ -1,4 +1,4 @@
-import { ArrowRight, Plus, ShieldAlert } from 'lucide-react';
+import { ArrowRight, Plus, ShieldAlert, Zap } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { StackedColumns } from '../components/charts';
 import { ErrorNote, Loading, VerdictChip } from '../components/ui';
@@ -103,6 +103,11 @@ export function Dashboard() {
           />
         </section>
       )}
+
+      <a className="row-link mg-dash-link" href={href({ name: 'grid' })}>
+        <span className="row"><Zap size={18} aria-hidden /><span><b>Microgrid forecast</b><br /><small className="muted">Next 24 hours of demand, grid ⇄ battery switching and overload alerts</small></span></span>
+        <ArrowRight size={16} aria-hidden />
+      </a>
 
       <section className="stack">
         <div className="section-title">

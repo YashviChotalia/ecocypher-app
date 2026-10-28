@@ -1,0 +1,6 @@
+{
+  "linear_regression_on_quickml_features": 8.297578671789356,
+  "lightgbm_on_quickml_features": 15.095542833935992,
+  "random_forest_on_quickml_features": 14.23677391224626,
+  "gradient_boosting_on_quickml_features": 11.333106150093872
+}

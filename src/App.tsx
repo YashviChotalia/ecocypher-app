@@ -1,4 +1,4 @@
-import { BarChart3, Database, FileCheck2, FileText, FolderLock, Settings as SettingsIcon } from 'lucide-react';
+import { BarChart3, Database, Zap, FileCheck2, FileText, FolderLock, Settings as SettingsIcon } from 'lucide-react';
 import { useEffect } from 'react';
 import { ToastHost } from './components/ui';
 import { repo } from './lib/data';
@@ -13,6 +13,7 @@ import { Data } from './screens/Data';
 import { EvidenceList } from './screens/Evidence';
 import { EvidenceItem } from './screens/EvidenceItem';
 import { EvidenceNew } from './screens/EvidenceNew';
+import { Microgrid } from './screens/Microgrid';
 import { Onboarding } from './screens/Onboarding';
 import { Reports } from './screens/Reports';
 import { Settings } from './screens/Settings';
@@ -22,12 +23,13 @@ const NAV: { route: Route; label: string; Icon: typeof BarChart3; match: Route['
   { route: { name: 'claims' }, label: 'Claims', Icon: FileCheck2, match: ['claims', 'claim'] },
   { route: { name: 'evidence' }, label: 'Evidence', Icon: FolderLock, match: ['evidence', 'evidence-new', 'evidence-item'] },
   { route: { name: 'data' }, label: 'Energy', Icon: Database, match: ['data'] },
+  { route: { name: 'grid' }, label: 'Grid', Icon: Zap, match: ['grid'] },
   { route: { name: 'reports' }, label: 'Reports', Icon: FileText, match: ['reports'] },
 ];
 
 const TITLE: Record<Route['name'], string> = {
   dashboard: 'Overview', claims: 'Claims', claim: 'Claim', evidence: 'Evidence', 'evidence-new': 'Add evidence',
-  'evidence-item': 'Evidence', data: 'Data', reports: 'Reports', settings: 'Settings',
+  'evidence-item': 'Evidence', data: 'Data', grid: 'Microgrid', reports: 'Reports', settings: 'Settings',
 };
 
 function Shell() {
@@ -44,6 +46,7 @@ function Shell() {
     case 'evidence-new': screen = <EvidenceNew key={route.tab ?? ''} tab={route.tab} />; break;
     case 'evidence-item': screen = <EvidenceItem key={route.id} id={route.id} />; break;
     case 'data': screen = <Data />; break;
+    case 'grid': screen = <Microgrid />; break;
     case 'reports': screen = <Reports />; break;
     case 'settings': screen = <Settings />; break;
     default: screen = <Dashboard />;

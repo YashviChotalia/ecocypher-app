@@ -8,6 +8,7 @@ export type Route =
   | { name: 'evidence-new'; tab?: string }
   | { name: 'evidence-item'; id: string }
   | { name: 'data' }
+  | { name: 'grid' }
   | { name: 'reports' }
   | { name: 'settings' };
 
@@ -20,6 +21,7 @@ export function parseHash(hash: string): Route {
       return p[1] ? { name: 'evidence-item', id: p[1] } : { name: 'evidence' };
     case 'verify': return p[1] ? { name: 'evidence-new', tab: `id:${p[1]}` } : { name: 'evidence-new', tab: 'scan' };
     case 'data': return { name: 'data' };
+    case 'grid': case 'microgrid': return { name: 'grid' };
     case 'reports': return { name: 'reports' };
     case 'settings': return { name: 'settings' };
     default: return { name: 'dashboard' };
