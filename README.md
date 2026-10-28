@@ -8,8 +8,7 @@ It is one app for phones, tablets and desktops, and also comes as an installable
 
 | | |
 | --- | --- |
-| **Live app (Zoho Catalyst)** | `https://<your-appsail-url>` ← add after `catalyst deploy` |
-| **Web (Vercel)** | https://ecocypher-app.vercel.app |
+| **Live app (Zoho Catalyst Slate)** | **https://ecocypher-app-pdvwmshp.onslate.in** |
 | **Android** | `EcoCypher.apk` (v2.1.1). Works offline. Build steps are in [`android/README.md`](android/README.md) |
 
 ---
@@ -36,7 +35,7 @@ implement the brief end to end on Zoho Catalyst.
 
 ### Try it in one minute
 
-1. Open the live app and go to **Grid**. The starter-kit test telemetry is already forecast.
+1. Open the [live app](https://ecocypher-app-pdvwmshp.onslate.in) and go to **Grid**, or go straight to [https://ecocypher-app-pdvwmshp.onslate.in/#/grid](https://ecocypher-app-pdvwmshp.onslate.in/#/grid). The starter-kit test telemetry is already forecast.
 2. The top of the screen shows the **power source now** (Battery storage / Main grid), any overload hours ahead, peak and average
    demand, the number of source switches and the battery charge at the end of the window.
 3. The **Demand** chart shows 24 hourly predictions against the 160 kW and 200 kW thresholds. The 18:00–22:00 window is shaded,
@@ -52,7 +51,7 @@ implement the brief end to end on Zoho Catalyst.
 | Criterion (weight) | What we did |
 | --- | --- |
 | **Model accuracy, 35 %** | Engineered features that match how demand behaves in `train_telemetry.csv` (time-of-day profile + cooling load above 24 °C). A **Linear Regression** QuickML pipeline on them scores **RMSE 8.30 kW** on a time-ordered holdout, close to the ≈ 8.5 kW noise in the data and well ahead of the tree models we compared (11–15 kW). `predict.py` passes `test_eval.py` (**SUCCESS**). |
-| **Deployment & functionality, 35 %** | One Catalyst **AppSail** service serves the full web app and the forecasting API. The whole workflow runs from one public URL: ingest → clean → QuickML forecast → controller → dashboard → Data Store / Stratus. |
+| **Deployment & functionality, 35 %** | The web app is live on **Catalyst Slate** (https://ecocypher-app-pdvwmshp.onslate.in). The forecasting API runs on **Catalyst AppSail**, which calls QuickML and stores runs in Data Store and raw CSVs in Stratus. The whole workflow works in the browser: ingest → clean → forecast → controller → dashboard. |
 | **Transition controller, 20 %** | The rules are implemented exactly as specified (table below). Python and TypeScript versions are checked against each other in tests. Each hour gets a mode, a dispatch signal, an overload flag and a written reason. A signal is emitted only when the source changes. |
 | **UI & UX, 10 %** | A calm, minimal dashboard: power-source status, demand chart with thresholds, battery state-of-charge chart, alert line, event timeline, hourly plan, CSV export and run history. It works from phone to desktop, in light and dark mode, and offline in the APK. |
 
@@ -127,7 +126,7 @@ API: `GET /api/health`, `/api/rules`, `/api/runs`, `/api/sample`, `/api/sample.c
 `POST /api/forecast` (`{csv}` or `{rows}`, optional `window_start`, `battery`) · `POST /api/predict` (any number of rows) ·
 `POST /api/control` (rules applied to your own predictions).
 
-Without a backend (the Vercel site, or the offline APK), the Grid tab runs the same cleaning, model and rules on the device and labels the
+Without a backend (for example the offline APK), the Grid tab runs the same cleaning, model and rules on the device and labels the
 forecast *On-device*.
 
 ### Setup
@@ -190,7 +189,7 @@ So `deploy-catalyst.ps1` merges `.env` into the config just for the deploy and t
 | `ZOHO_CLIENT_ID` · `ZOHO_CLIENT_SECRET` · `ZOHO_REFRESH_TOKEN` | Auto-refreshing OAuth (recommended), or a short-lived `QUICKML_ACCESS_TOKEN` |
 | `ZOHO_ACCOUNTS_URL` | `https://accounts.zoho.in` (India data centre) |
 | `DATASTORE_TABLE` · `STRATUS_BUCKET` | Optional persistence |
-| `VITE_MICROGRID_API_URL` | *Web build only.* Points the Vercel site or the APK at the AppSail URL. You can also paste the URL in Grid → Forecast service. |
+| `VITE_MICROGRID_API_URL` | *Web build only.* Points the Slate site or the APK at the AppSail URL. You can also paste the URL in Grid → Forecast service. |
 
 **6. Scoring contract**
 
@@ -206,7 +205,7 @@ python -m pytest tests -q                # controller + pipeline tests
 
 ### Submission checklist
 
-- [ ] Public Catalyst AppSail URL (add it at the top of this README)
+- [x] Public Catalyst URL: https://ecocypher-app-pdvwmshp.onslate.in
 - [x] Full source: web app (`src/`), backend (`microgrid/appsail/`), Android wrapper (`android/`)
 - [x] `predict.py` wired to the QuickML endpoint through environment variables · `test_eval.py` → SUCCESS
 - [x] README: setup, architecture, environment variables (credentials stay out of the repo)
@@ -240,17 +239,17 @@ npm run build
    It sets up row-level security (each company sees only its own data; evidence and the audit trail are append-only), invite functions and a
    private `evidence` storage bucket.
 2. Add your site URL under **Authentication → URL configuration**.
-3. Put **Project URL** and **anon key** in `.env` (or the Vercel environment):
+3. Put **Project URL** and **anon key** in `.env`:
    ```
    VITE_SUPABASE_URL=https://xxxx.supabase.co
    VITE_SUPABASE_ANON_KEY=eyJ...
    ```
 4. The first person to sign up creates the company and becomes admin, then invites managers by email.
 
-### Deploy on Vercel
+### Deploy the web app on Catalyst Slate
 
-Framework **Vite**, build `npm run build`, output `dist`. `vercel.json` handles SPA routing, and `/verify/EVD-…` links from QR receipts open the
-matching evidence.
+Slate → framework **Vite**, build `npm run build`, output `dist`. Live at https://ecocypher-app-pdvwmshp.onslate.in.
+`/verify/EVD-…` links from QR receipts open the matching evidence.
 
 ## Repository layout
 

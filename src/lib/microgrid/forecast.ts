@@ -16,7 +16,7 @@ const write = (k: string, v: unknown) => { try { localStorage.setItem(k, JSON.st
 function sameOrigin(): string {
   try {
     const h = location.hostname;
-    if (!/^https?:$/.test(location.protocol) || h === 'localhost' || h === '127.0.0.1' || h.endsWith('.local') || h.endsWith('vercel.app')) return '';
+    if (!/^https?:$/.test(location.protocol) || h === 'localhost' || h === '127.0.0.1' || h.endsWith('.local') || h.endsWith('vercel.app') || /\.onslate\.(in|com|eu|com\.au|ca|sa|jp|ae)$/.test(h)) return ''; // static hosts: no /api
     return location.origin;
   } catch { return ''; }
 }
