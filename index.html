@@ -51,7 +51,7 @@
         var t0 = Date.now();
         var min = 1600; // the splash always shows in full, every time the app opens
         try {
-          var p = localStorage.getItem('ecocypher-theme-v2');
+          var p = localStorage.getItem('ecocypher-theme-v3');
           if (p === 'dark' || (p === 'system' && matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.classList.add('sp-dark');
         } catch (e) {}
         window.__hideSplash = function () {
