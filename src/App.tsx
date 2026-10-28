@@ -83,10 +83,13 @@ function Shell() {
   );
 }
 
+declare global { interface Window { __hideSplash?: () => void } }
+
 function Gate() {
   const { ready, user, memberships } = useSession();
   useTheme();
-  if (!ready) return <div className="splash"><img src="/logo.svg" alt="EcoCypher" width={72} height={72} /></div>;
+  useEffect(() => { if (ready) window.__hideSplash?.(); }, [ready]);
+  if (!ready) return null;
   if (!user) return <Auth />;
   if (!memberships.length) return <Onboarding />;
   return <Shell />;
