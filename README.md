@@ -137,6 +137,8 @@ forecast *On-device*.
 1. Catalyst console → your project → **QuickML** → *Datasets* → upload `microgrid/quickml/train_quickml.csv`.
 2. *Pipelines* → **Create ML pipeline** → Regression, target `target_demand_kw`. Drop `timestamp` and keep every other column.
 3. Algorithm **Linear Regression** → run → **Publish**. From *Endpoints*, copy the deployment URL and endpoint key, and note your org id.
+   The endpoint takes `POST /quickml/v1/project/{project_id}/endpoints/predict` with `{"data": {feature: value}}` and returns `{"result": [prediction]}`.
+   Feature names must match the training columns exactly.
 
 **2. OAuth for the endpoint.** At https://api-console.zoho.in create a **Self Client**, generate a code with scope
 `QuickML.deployment.READ`, and exchange it for a refresh token:
@@ -168,21 +170,23 @@ Or step by step:
 npm install -g zcatalyst-cli
 catalyst login
 bash microgrid/build_catalyst.sh           # builds the web app into microgrid/appsail/static
-cd microgrid && catalyst deploy            # AppSail: source appsail · Python · "python3 app.py"
+cd microgrid && catalyst project:use && catalyst deploy --only appsail:microgrid   # Python 3.12 · "python3 app.py"
 ```
 
 The deployed app opens on the Grid screen. Make the AppSail URL public (no authentication) for judging. For persistence, create the Data Store table `forecast_runs`
 (`run_id, created_at, source, window_start` text · `peak_kw, final_soc_pct` double · `overload_hours, transitions` int · `payload` text)
 and a Stratus bucket. Then `pip install zcatalyst-sdk -t microgrid/appsail` before deploying. Without them, runs are kept in a local log.
 
-**5. Environment variables.** Set these in the AppSail console. See [`microgrid/.env.example`](microgrid/.env.example). Never commit secrets.
+**5. Environment variables.** Copy [`microgrid/.env.example`](microgrid/.env.example) to `microgrid/.env` (git-ignored) and fill it in.
+A CLI deploy replaces AppSail's environment variables with the `env_variables` in `app-config.json`, and values set in the Console are wiped.
+So `deploy-catalyst.ps1` merges `.env` into the config just for the deploy and then restores the committed file. Secrets never enter git.
 
 | Variable | Purpose |
 | --- | --- |
 | `QUICKML_ENDPOINT_URL` | Published endpoint deployment URL |
 | `QUICKML_ENDPOINT_KEY` | `X-QUICKML-ENDPOINT-KEY` header |
-| `CATALYST_ORG` | `CATALYST-ORG` header |
-| `QUICKML_ENVIRONMENT` | `Production` or `Development` |
+| `QUICKML_ORG_ID` | Your Catalyst org id, sent as the `CATALYST-ORG` header. User variable names must not contain `CATALYST`, because AppSail reserves them. |
+| `QUICKML_ENVIRONMENT` | `Development` (default) or `Production` |
 | `ZOHO_CLIENT_ID` · `ZOHO_CLIENT_SECRET` · `ZOHO_REFRESH_TOKEN` | Auto-refreshing OAuth (recommended), or a short-lived `QUICKML_ACCESS_TOKEN` |
 | `ZOHO_ACCOUNTS_URL` | `https://accounts.zoho.in` (India data centre) |
 | `DATASTORE_TABLE` · `STRATUS_BUCKET` | Optional persistence |

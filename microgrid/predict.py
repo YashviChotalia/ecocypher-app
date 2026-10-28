@@ -13,8 +13,8 @@ Flow:
 Configuration (environment variables override the constants below; never commit secrets):
   QUICKML_ENDPOINT_URL   published endpoint "Deployment URL"
   QUICKML_ENDPOINT_KEY   X-QUICKML-ENDPOINT-KEY
-  CATALYST_ORG           CATALYST-ORG header (org id)
-  QUICKML_ENVIRONMENT    Development | Production (default Production)
+  QUICKML_ORG_ID         CATALYST-ORG header (your Catalyst org id; CATALYST_ORG is also accepted)
+  QUICKML_ENVIRONMENT    Development | Production (default Development)
   QUICKML_ACCESS_TOKEN   OAuth access token (scope QuickML.deployment.READ), or for auto-refresh:
   ZOHO_CLIENT_ID / ZOHO_CLIENT_SECRET / ZOHO_REFRESH_TOKEN / ZOHO_ACCOUNTS_URL (default https://accounts.zoho.in)
 """
@@ -32,8 +32,8 @@ import pandas as pd
 
 QUICKML_ENDPOINT_URL = os.getenv("QUICKML_ENDPOINT_URL", "YOUR_PUBLISHED_QUICKML_ENDPOINT_URL_HERE")
 QUICKML_ENDPOINT_KEY = os.getenv("QUICKML_ENDPOINT_KEY", "")
-CATALYST_ORG = os.getenv("CATALYST_ORG", "")
-QUICKML_ENVIRONMENT = os.getenv("QUICKML_ENVIRONMENT", "Production")
+CATALYST_ORG = os.getenv("QUICKML_ORG_ID") or os.getenv("CATALYST_ORG", "")
+QUICKML_ENVIRONMENT = os.getenv("QUICKML_ENVIRONMENT", "Development")
 QUICKML_ACCESS_TOKEN = os.getenv("QUICKML_ACCESS_TOKEN", "")
 ZOHO_CLIENT_ID = os.getenv("ZOHO_CLIENT_ID", "")
 ZOHO_CLIENT_SECRET = os.getenv("ZOHO_CLIENT_SECRET", "")
@@ -189,8 +189,7 @@ def predict_quickml(feats: pd.DataFrame) -> np.ndarray:
                 return np.array(got, dtype=float)
         except Exception as e:  # noqa: BLE001
             _log(f"QuickML batch attempt failed: {e}")
-    out = []
-    for rec in records:  # row-by-row call
+    def one(rec):  # documented contract: {"data": {feature: value}} -> {"result": [prediction]}
         val, last = None, None
         for body in ({"data": rec}, {"data": [rec]}, rec):
             try:
@@ -202,7 +201,12 @@ def predict_quickml(feats: pd.DataFrame) -> np.ndarray:
                 last = e
         if val is None:
             raise RuntimeError(f"QuickML returned no prediction ({last})")
-        out.append(val)
+        return val
+
+    _token()  # fetch the OAuth token once before the parallel calls
+    from concurrent.futures import ThreadPoolExecutor
+    with ThreadPoolExecutor(max_workers=8) as pool:  # row-by-row, 8 at a time, input order preserved
+        out = list(pool.map(one, records))
     return np.array(out, dtype=float)
 
 

@@ -18,8 +18,8 @@ def quickml_config():
     return {
         "url": os.getenv("QUICKML_ENDPOINT_URL", "").strip(),
         "key": os.getenv("QUICKML_ENDPOINT_KEY", "").strip(),
-        "org": os.getenv("CATALYST_ORG", "").strip(),
-        "env": os.getenv("QUICKML_ENVIRONMENT", "Production").strip(),
+        "org": (os.getenv("QUICKML_ORG_ID") or os.getenv("CATALYST_ORG", "")).strip(),
+        "env": os.getenv("QUICKML_ENVIRONMENT", "Development").strip(),
         "token": os.getenv("QUICKML_ACCESS_TOKEN", "").strip(),
         "refresh": os.getenv("ZOHO_REFRESH_TOKEN", "").strip(),
         "client_id": os.getenv("ZOHO_CLIENT_ID", "").strip(),

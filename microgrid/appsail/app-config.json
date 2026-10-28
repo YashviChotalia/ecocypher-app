@@ -1,9 +1,9 @@
 {
   "command": "python3 app.py",
   "build_path": "./",
-  "stack": "python_3_9",
+  "stack": "python_3_12",
   "env_variables": {
-    "QUICKML_ENVIRONMENT": "Production",
+    "QUICKML_ENVIRONMENT": "Development",
     "ZOHO_ACCOUNTS_URL": "https://accounts.zoho.in"
   },
   "memory": 256,
