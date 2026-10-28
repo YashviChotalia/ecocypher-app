@@ -1,59 +1,60 @@
-# EcoCypher Companion
+# EcoCypher ESG
 
-A mobile-first companion app for the [EcoCypher](https://github.com/Samhita-Hejmadi/ECOCYPHER) MRV platform.
-It moves sustainability from claims-based trust to evidence-based accountability, in your pocket:
+A workspace for **company ESG teams** that turns sustainability from claims-based trust into evidence-based accountability.
+Every green claim is checked against fingerprinted evidence and real energy data *before* it is published.
+Works on phones, tablets and desktops, and installs as an app (PWA).
 
-- **Scan** an EcoCypher QR receipt with the camera (or upload a photo, or type the ID).
-- **Verify** the evidence on your own device: the canonical record is re-hashed with SHA-256 and compared with the
-  hash recorded at creation and, when anchored, the copy in `EvidenceRegistry.sol`. One changed digit shows as **Evidence was altered**.
-- **Check a claim**: paste a green claim, attach evidence, and get a verdict (*Supported / Questionable / Not supported*)
-  with the reason for every rule.
-- **Wallet**: keep the records you’ve scanned; integrity is re-checked every time the app opens.
-
-Works on phones, tablets and desktops, installs to the home screen (PWA) and keeps working offline.
+| Area | What ESG managers do there |
+| --- | --- |
+| **Overview** | Scope 1 + 2 emissions, energy (GJ), renewable share and year-on-year change; claims pipeline; greenwashing-risk score; alerts for altered evidence and risky approved claims |
+| **Claims register** | Log every claim for reports, BRSR, website, ads, social and press. A rule-based check runs as you type (vague or absolute wording, offsets, pledges, time period, evidence integrity, anchoring, audit, and claimed figures vs evidence and company data). Draft → in review → approved / rejected → published, with an audit trail. Approving an unsupported claim needs a written justification. |
+| **Evidence library** | Upload bills, meter exports, audit reports and certificates, or import EcoCypher MRV records by QR code. Each item gets a SHA-256 fingerprint; any later change shows as **altered** and stops supporting claims. |
+| **Facilities & energy** | Monthly grid and renewable electricity, diesel and LPG per facility (form or CSV import), linked to evidence. |
+| **Reports** | BRSR Section C, Principle 6 (energy and Scope 1/2 emissions, intensity per ₹ crore turnover), approved claims and an evidence index with fingerprints. Export CSV / JSON or print to PDF. |
+| **Settings** | Company profile, turnover, emission factors, team roles (admin / manager / viewer) and invites. |
 
 ## Run it
 
 ```bash
 npm install
-npm run dev        # http://localhost:5173
-npm test           # rules engine + hashing tests
-npm run build      # production build in dist/
+npm run dev     # http://localhost:5173 (demo workspace with a sample company)
+npm test
+npm run build
 ```
 
-## Connect your EcoCypher server
+Without Supabase settings the app runs a **demo workspace** (sample textile company, stored only in your browser),
+so you can try every feature immediately.
 
-The app ships with three sample records so it works without a backend. To look up live evidence, open
-**Settings → EcoCypher server** and enter your impact API address (it must be `https://` when the app is served over HTTPS,
-and the API must allow the app’s origin via CORS). The app uses:
+## Use it with your team (Supabase)
 
-| Endpoint | Used for |
-| --- | --- |
-| `GET /api/health` | Connection test |
-| `GET /api/mrv/:evidence_id` | Canonical JSON + recorded hash |
-| `GET /api/verify/:evidence_id` | On-chain hash and anchor status |
+1. Create a free project at [supabase.com](https://supabase.com).
+2. In **SQL editor**, run `supabase/migrations/001_esg_workspace.sql`. It creates the tables, row-level security
+   (each company sees only its own data; evidence and the audit trail are append-only), invite functions and a private
+   `evidence` storage bucket.
+3. In **Authentication → URL configuration**, add your site URL (e.g. your Vercel domain) to the redirect URLs.
+4. Copy **Project URL** and **anon public key** from Settings → API into `.env` (or Vercel environment variables):
 
-You can also set a default with `VITE_DEFAULT_API_URL` (see `.env.example`).
+   ```
+   VITE_SUPABASE_URL=https://xxxx.supabase.co
+   VITE_SUPABASE_ANON_KEY=eyJ...
+   ```
+5. Deploy. The first person to sign up creates the company and becomes its admin, then invites managers by email
+   from Settings. Invited people join when they sign in with that email.
 
-## How the claim check works
+## Deploy on Vercel
 
-Rules run locally and are fully explainable (`src/lib/claims.ts`):
+Import the repo, framework **Vite**, build `npm run build`, output `dist`, and add the two environment variables.
+`vercel.json` handles SPA routing, and `/verify/EVD-…` links from EcoCypher QR receipts open the matching evidence.
 
-| Rule | Fails / warns when |
-| --- | --- |
-| Measurable result | No figure with a unit (kWh, tCO₂e, %, ₹) |
-| Vague wording | “eco-friendly”, “green”, “sustainable”… |
-| Absolute claims | “carbon neutral”, “net zero”, “100% renewable” without full-scope accounting |
-| Offsets / future pledges | Relies on offsets, or describes a target instead of a result |
-| Time period | No date or period |
-| Evidence integrity | Recomputed SHA-256 ≠ recorded hash |
-| Anchoring / audit | Not anchored on-chain; no independent verifier |
-| Figures vs evidence | Claimed kWh, CO₂e, % or ₹ exceed the verified values by more than 2% |
+## Method notes
 
-## Deploy
-
-Ready for Vercel (`vercel.json` included): import the repo, framework *Vite*, build `npm run build`, output `dist`.
-Deep links from platform QR codes (`/verify/EVD-…` or `?verify=EVD-…`) open the right record.
+- Financial years run April–March (Indian FY).
+- Energy content: electricity 0.0036 GJ/kWh; diesel 0.0358 GJ/L; LPG 0.0473 GJ/kg (IPCC 2006 net calorific values).
+- Default emission factors (editable per company): grid 0.71 kg CO₂e/kWh (CEA CO₂ Baseline Database), diesel 2.68 kg/L,
+  LPG 2.98 kg/kg (IPCC 2006). Check the latest CEA database version for your reporting year.
+- Evidence fingerprints use canonical JSON (sorted keys, compact) hashed with SHA-256 in the browser (Web Crypto).
+  Imported MRV records keep the canonical JSON and hash issued by the EcoCypher impact platform.
+- The claim check is deterministic and explainable (`src/lib/claims.ts`); it supports, not replaces, legal review.
 
 ## Brand
 

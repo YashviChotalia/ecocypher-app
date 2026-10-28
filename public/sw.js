@@ -1,5 +1,5 @@
 /* EcoCypher Companion service worker: app-shell caching for offline use. */
-const VERSION = 'ecocypher-v1';
+const VERSION = 'ecocypher-esg-v2';
 const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/icons/icon-192.png', '/icons/icon-512.png', '/logo.svg'];
 
 self.addEventListener('install', (event) => {

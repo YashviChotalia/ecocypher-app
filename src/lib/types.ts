@@ -1,51 +1,128 @@
-export type AnchorStatus = 'ANCHORED' | 'SIMULATED' | 'PENDING' | 'FAILED';
+export type Role = 'admin' | 'manager' | 'viewer';
 
-/** The fields that are hashed. Mirrors the EcoCypher canonical MRV schema v1.0.0. */
-export interface CanonicalEvidence {
-  baseline_kwh: number;
-  building_id: string;
-  co2e_reduction_kg: number;
-  economic_saving: number;
-  intervention_id: string;
-  post_intervention_kwh: number;
-  savings_kwh: number;
-  schema_version: string;
-}
-
-/** An evidence record as held in the wallet or returned by the impact API. */
-export interface EvidenceRecord {
-  evidence_id: string;
-  title: string;
-  /** Exact canonical JSON string that was hashed. Verification re-hashes this. */
-  canonical_json: string;
-  /** SHA-256 recorded when the evidence was created. */
-  evidence_hash: string;
-  /** Hash stored on-chain in EvidenceRegistry.sol, when anchored. */
-  onchain_hash?: string;
-  anchor_status: AnchorStatus;
-  tx_hash?: string;
-  block_number?: number;
-  method: string;
-  baseline_period?: string;
-  reporting_period?: string;
-  tariff_inr_per_kwh?: number;
-  emission_factor?: number;
-  emission_factor_source?: string;
-  external_verification: 'PERFORMED' | 'NOT_PERFORMED';
-  verifier?: string;
-  source: 'demo' | 'api' | 'scan';
-  demo_note?: string;
+export interface Company {
+  id: string;
+  name: string;
+  industry: string;
+  cin?: string;
+  /** Grid emission factor, kg CO₂e per kWh (default: CEA CO₂ Baseline Database). */
+  grid_ef: number;
+  diesel_ef: number; // kg CO₂e per litre
+  lpg_ef: number; // kg CO₂e per kg
+  /** Turnover by financial year, ₹ crore, e.g. { "2025-26": 412 } */
+  turnover_cr: Record<string, number>;
   created_at: string;
-  saved_at?: string;
 }
 
-export type IntegrityState = 'INTACT' | 'TAMPERED' | 'UNREADABLE';
-
-export interface VerificationResult {
-  record: EvidenceRecord;
-  evidence: CanonicalEvidence | null;
-  computed_hash: string;
-  integrity: IntegrityState;
-  chain: 'MATCHED' | 'MISMATCHED' | 'NOT_ANCHORED';
-  checked_at: string;
+export interface Member {
+  user_id: string;
+  company_id: string;
+  role: Role;
+  name: string;
+  email: string;
 }
+
+export interface Invite {
+  id: string;
+  company_id: string;
+  company_name?: string;
+  email: string;
+  role: Role;
+  created_at: string;
+}
+
+export interface Facility {
+  id: string;
+  company_id: string;
+  name: string;
+  city: string;
+  kind: string;
+}
+
+/** One month of activity data for one facility. */
+export interface EnergyRecord {
+  id: string;
+  company_id: string;
+  facility_id: string;
+  month: string; // YYYY-MM
+  grid_kwh: number;
+  renewable_kwh: number;
+  diesel_l: number;
+  lpg_kg: number;
+  evidence_id?: string | null;
+  created_at: string;
+}
+
+export type EvidenceKind = 'mrv' | 'meter' | 'invoice' | 'audit' | 'certificate' | 'other';
+export type AnchorStatus = 'ANCHORED' | 'SIMULATED' | 'PENDING' | 'NONE';
+
+export interface EvidenceMetrics {
+  baseline_kwh?: number;
+  savings_kwh?: number;
+  co2e_kg?: number;
+  money_inr?: number;
+  renewable_kwh?: number;
+}
+
+export interface Evidence {
+  id: string;
+  company_id: string;
+  ref: string; // EVD-…
+  kind: EvidenceKind;
+  title: string;
+  facility_id?: string | null;
+  period_start?: string | null;
+  period_end?: string | null;
+  metrics: EvidenceMetrics;
+  /** Exact canonical JSON that was fingerprinted. */
+  canonical_json: string;
+  sha256: string;
+  anchor_status: AnchorStatus;
+  onchain_hash?: string | null;
+  tx_hash?: string | null;
+  audited: boolean;
+  auditor?: string | null;
+  file_name?: string | null;
+  file_size?: number | null;
+  file_sha256?: string | null;
+  file_path?: string | null;
+  notes?: string | null;
+  created_by?: string | null;
+  created_at: string;
+}
+
+export type ClaimStatus = 'draft' | 'in_review' | 'approved' | 'rejected' | 'published';
+export type ClaimChannel = 'annual_report' | 'brsr' | 'website' | 'advertising' | 'social' | 'press' | 'product' | 'other';
+export type Verdict = 'SUPPORTED' | 'QUESTIONABLE' | 'UNSUPPORTED';
+
+export interface Claim {
+  id: string;
+  company_id: string;
+  text: string;
+  channel: ClaimChannel;
+  status: ClaimStatus;
+  evidence_ids: string[];
+  verdict?: Verdict | null;
+  score?: number | null;
+  owner_name?: string | null;
+  publish_on?: string | null;
+  decision_note?: string | null;
+  decided_by?: string | null;
+  decided_at?: string | null;
+  created_by?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Activity {
+  id: string;
+  company_id: string;
+  actor: string;
+  action: string;
+  entity: 'claim' | 'evidence' | 'energy' | 'facility' | 'company' | 'member';
+  entity_id?: string | null;
+  detail?: string | null;
+  at: string;
+}
+
+export type IntegrityState = 'INTACT' | 'TAMPERED';

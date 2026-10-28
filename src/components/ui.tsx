@@ -1,80 +1,116 @@
-import { AlertTriangle, CheckCircle2, ShieldAlert, ShieldCheck, ShieldQuestion, XCircle } from 'lucide-react';
-import { useEffect, useState, type ReactNode } from 'react';
-import { href } from '../lib/router';
-import { parseEvidence } from '../lib/hash';
-import { fmtNum } from '../lib/format';
-import type { AnchorStatus, EvidenceRecord, IntegrityState } from '../lib/types';
+import { AlertTriangle, CheckCircle2, X, XCircle } from 'lucide-react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import type { CheckLevel } from '../lib/claims';
+import type { AnchorStatus, ClaimChannel, ClaimStatus, EvidenceKind, Verdict } from '../lib/types';
 
+export function PageHeader({ eyebrow, title, children, actions }: { eyebrow?: string; title: string; children?: ReactNode; actions?: ReactNode }) {
+  return (
+    <header className="page-header">
+      <div className="stack" style={{ gap: 6, minWidth: 0 }}>
+        {eyebrow && <span className="eyebrow">{eyebrow}</span>}
+        <h1 className="page-title">{title}</h1>
+        {children && <p className="lede">{children}</p>}
+      </div>
+      {actions && <div className="row header-actions">{actions}</div>}
+    </header>
+  );
+}
+
+export const STATUS_LABEL: Record<ClaimStatus, string> = {
+  draft: 'Draft', in_review: 'In review', approved: 'Approved', rejected: 'Rejected', published: 'Published',
+};
+const STATUS_TONE: Record<ClaimStatus, string> = { draft: 'neutral', in_review: 'info', approved: 'pass', rejected: 'fail', published: 'pass' };
+export function StatusChip({ status }: { status: ClaimStatus }) {
+  return <span className={`chip ${STATUS_TONE[status]}`}>{STATUS_LABEL[status]}</span>;
+}
+
+export const VERDICT_LABEL: Record<Verdict, string> = { SUPPORTED: 'Supported', QUESTIONABLE: 'Questionable', UNSUPPORTED: 'Not supported' };
+export const VERDICT_TONE: Record<Verdict, 'pass' | 'warn' | 'fail'> = { SUPPORTED: 'pass', QUESTIONABLE: 'warn', UNSUPPORTED: 'fail' };
+export function VerdictChip({ verdict }: { verdict?: Verdict | null }) {
+  if (!verdict) return <span className="chip neutral">Not checked</span>;
+  return <span className={`chip ${VERDICT_TONE[verdict]}`}><LevelIcon level={VERDICT_TONE[verdict]} /> {VERDICT_LABEL[verdict]}</span>;
+}
+
+export const CHANNEL_LABEL: Record<ClaimChannel, string> = {
+  annual_report: 'Annual report', brsr: 'BRSR disclosure', website: 'Website', advertising: 'Advertising',
+  social: 'Social media', press: 'Press release', product: 'Product label', other: 'Other',
+};
+export const KIND_LABEL: Record<EvidenceKind, string> = {
+  mrv: 'MRV record', meter: 'Meter data', invoice: 'Bills & invoices', audit: 'Audit report', certificate: 'Certificate', other: 'Other document',
+};
 export function AnchorChip({ status }: { status: AnchorStatus }) {
   const map: Record<AnchorStatus, [string, string]> = {
-    ANCHORED: ['pass', 'Anchored'],
-    SIMULATED: ['warn', 'Not anchored'],
-    PENDING: ['neutral', 'Pending'],
-    FAILED: ['fail', 'Anchor failed'],
+    ANCHORED: ['pass', 'Anchored on-chain'], SIMULATED: ['warn', 'Not anchored'], PENDING: ['neutral', 'Anchor pending'], NONE: ['neutral', 'Fingerprinted'],
   };
-  const [cls, label] = map[status] ?? ['neutral', status];
-  return <span className={`chip ${cls}`}>{label}</span>;
+  const [tone, label] = map[status] ?? ['neutral', status];
+  return <span className={`chip ${tone}`}>{label}</span>;
 }
 
-export function IntegrityIcon({ state, size = 20 }: { state: IntegrityState | 'UNKNOWN'; size?: number }) {
-  if (state === 'INTACT') return <ShieldCheck size={size} aria-label="Intact" />;
-  if (state === 'TAMPERED') return <ShieldAlert size={size} aria-label="Altered" />;
-  return <ShieldQuestion size={size} aria-label="Unknown" />;
-}
-
-export function LevelIcon({ level }: { level: 'pass' | 'warn' | 'fail' }) {
+export function LevelIcon({ level }: { level: CheckLevel }) {
   if (level === 'pass') return <CheckCircle2 aria-hidden />;
   if (level === 'warn') return <AlertTriangle aria-hidden />;
   return <XCircle aria-hidden />;
 }
 
-export function RecordRow({ record, integrity }: { record: EvidenceRecord; integrity?: IntegrityState }) {
-  const ev = parseEvidence(record);
-  const tone = integrity === 'TAMPERED' ? 'fail' : record.anchor_status === 'ANCHORED' ? 'pass' : 'warn';
-  const bg = { pass: 'var(--pass-bg)', warn: 'var(--warn-bg)', fail: 'var(--fail-bg)' }[tone];
-  const fg = { pass: 'var(--pass)', warn: 'var(--warn)', fail: 'var(--fail)' }[tone];
-  return (
-    <a className="record" href={href({ name: 'verify', id: record.evidence_id })}>
-      <span className="dot" style={{ background: bg, color: fg }}>
-        <IntegrityIcon state={integrity ?? 'UNKNOWN'} />
-      </span>
-      <span className="meta">
-        <b>{record.title}</b>
-        <small>{record.evidence_id}</small>
-      </span>
-      <span className="num">
-        {fmtNum(ev?.savings_kwh)} kWh
-        <small>{integrity === 'TAMPERED' ? 'Altered' : record.anchor_status === 'ANCHORED' ? 'Anchored' : 'Not anchored'}</small>
-      </span>
-    </a>
-  );
-}
-
+/* Toasts */
 let toastSetter: ((m: string | null) => void) | null = null;
 export const toast = (message: string) => toastSetter?.(message);
-
 export function ToastHost() {
   const [msg, setMsg] = useState<string | null>(null);
-  useEffect(() => {
-    toastSetter = setMsg;
-    return () => { toastSetter = null; };
-  }, []);
+  useEffect(() => { toastSetter = setMsg; return () => { toastSetter = null; }; }, []);
   useEffect(() => {
     if (!msg) return;
-    const t = setTimeout(() => setMsg(null), 2600);
+    const t = setTimeout(() => setMsg(null), 2800);
     return () => clearTimeout(t);
   }, [msg]);
   return msg ? <div className="toast fade-in" role="status" aria-live="polite">{msg}</div> : null;
 }
 
-export function PageHeader({ eyebrow, title, children }: { eyebrow?: string; title: string; children?: ReactNode }) {
+/** Bottom sheet on phones, centred dialog on larger screens. */
+export function Sheet({ title, open, onClose, children, footer }: { title: string; open: boolean; onClose: () => void; children: ReactNode; footer?: ReactNode }) {
+  const ref = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    const d = ref.current;
+    if (!d) return;
+    if (open && !d.open) d.showModal();
+    if (!open && d.open) d.close();
+  }, [open]);
   return (
-    <header className="stack" style={{ gap: 6 }}>
-      {eyebrow && <span className="eyebrow">{eyebrow}</span>}
-      <h1 className="page-title">{title}</h1>
-      {children && <p className="lede">{children}</p>}
-    </header>
+    <dialog ref={ref} className="sheet" onClose={onClose} onClick={(e) => { if (e.target === ref.current) onClose(); }} aria-label={title}>
+      <div className="sheet-inner">
+        <div className="sheet-head">
+          <h2>{title}</h2>
+          <button className="icon-btn" onClick={onClose} aria-label="Close"><X aria-hidden /></button>
+        </div>
+        <div className="sheet-body">{open && children}</div>
+        {footer && <div className="sheet-foot">{footer}</div>}
+      </div>
+    </dialog>
   );
+}
+
+export function Empty({ icon, title, children, action }: { icon: ReactNode; title: string; children?: ReactNode; action?: ReactNode }) {
+  return (
+    <div className="empty">
+      {icon}
+      <b>{title}</b>
+      {children && <p>{children}</p>}
+      {action}
+    </div>
+  );
+}
+
+export function Loading({ rows = 3 }: { rows?: number }) {
+  return (
+    <div className="stack" aria-busy="true" aria-label="Loading">
+      {Array.from({ length: rows }, (_, i) => <div key={i} className="skeleton" style={{ height: i === 0 ? 96 : 64 }} />)}
+    </div>
+  );
+}
+
+export function ErrorNote({ error }: { error?: Error }) {
+  if (!error) return null;
+  return <div className="note fail" role="alert">{error.message}</div>;
 }
 
 export async function copyText(text: string): Promise<boolean> {
@@ -97,3 +133,20 @@ export async function copyText(text: string): Promise<boolean> {
     }
   }
 }
+
+export function download(name: string, content: string, type = 'text/csv') {
+  const url = URL.createObjectURL(new Blob([content], { type }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+export const toCsv = (rows: (string | number | null | undefined)[][]) =>
+  rows.map((r) => r.map((v) => {
+    const s = v == null ? '' : String(v);
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  }).join(',')).join('\n');

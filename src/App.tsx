@@ -1,103 +1,103 @@
-import { FileSearch, Home as HomeIcon, ScanLine, Settings as SettingsIcon, Wallet as WalletIcon } from 'lucide-react';
+import { BarChart3, Database, FileCheck2, FileText, FolderLock, Settings as SettingsIcon } from 'lucide-react';
 import { useEffect } from 'react';
 import { ToastHost } from './components/ui';
+import { repo } from './lib/data';
 import { href, useRoute, type Route } from './lib/router';
-import { useStore } from './lib/store';
-import { Check } from './screens/Check';
-import { Home } from './screens/Home';
-import { Scan } from './screens/Scan';
+import { SessionProvider, useSession } from './lib/session';
+import { useTheme } from './lib/theme';
+import { Auth } from './screens/Auth';
+import { ClaimDetail } from './screens/ClaimDetail';
+import { Claims } from './screens/Claims';
+import { Dashboard } from './screens/Dashboard';
+import { Data } from './screens/Data';
+import { EvidenceList } from './screens/Evidence';
+import { EvidenceItem } from './screens/EvidenceItem';
+import { EvidenceNew } from './screens/EvidenceNew';
+import { Onboarding } from './screens/Onboarding';
+import { Reports } from './screens/Reports';
 import { Settings } from './screens/Settings';
-import { Verify } from './screens/Verify';
-import { Wallet } from './screens/Wallet';
 
-const NAV: { route: Route; label: string; Icon: typeof HomeIcon }[] = [
-  { route: { name: 'home' }, label: 'Home', Icon: HomeIcon },
-  { route: { name: 'scan' }, label: 'Scan', Icon: ScanLine },
-  { route: { name: 'check' }, label: 'Check', Icon: FileSearch },
-  { route: { name: 'wallet' }, label: 'Wallet', Icon: WalletIcon },
+const NAV: { route: Route; label: string; Icon: typeof BarChart3; match: Route['name'][] }[] = [
+  { route: { name: 'dashboard' }, label: 'Overview', Icon: BarChart3, match: ['dashboard'] },
+  { route: { name: 'claims' }, label: 'Claims', Icon: FileCheck2, match: ['claims', 'claim'] },
+  { route: { name: 'evidence' }, label: 'Evidence', Icon: FolderLock, match: ['evidence', 'evidence-new', 'evidence-item'] },
+  { route: { name: 'data' }, label: 'Data', Icon: Database, match: ['data'] },
+  { route: { name: 'reports' }, label: 'Reports', Icon: FileText, match: ['reports'] },
 ];
 
-const TITLES: Record<Route['name'], string> = {
-  home: 'EcoCypher', scan: 'Scan · EcoCypher', check: 'Claim check · EcoCypher',
-  wallet: 'Wallet · EcoCypher', settings: 'Settings · EcoCypher', verify: 'Verification · EcoCypher',
+const TITLE: Record<Route['name'], string> = {
+  dashboard: 'Overview', claims: 'Claims', claim: 'Claim', evidence: 'Evidence', 'evidence-new': 'Add evidence',
+  'evidence-item': 'Evidence', data: 'Data', reports: 'Reports', settings: 'Settings',
 };
 
-function useTheme() {
-  const pref = useStore((s) => s.settings.theme);
-  useEffect(() => {
-    const mq = window.matchMedia('(prefers-color-scheme: dark)');
-    const apply = () => {
-      const dark = pref === 'dark' || (pref === 'system' && mq.matches);
-      document.documentElement.dataset.theme = dark ? 'dark' : 'light';
-      document.querySelectorAll('meta[name="theme-color"]').forEach((m) => m.remove());
-      const meta = document.createElement('meta');
-      meta.name = 'theme-color';
-      meta.content = dark ? '#0F1A15' : '#FAF6EA';
-      document.head.appendChild(meta);
-    };
-    apply();
-    mq.addEventListener('change', apply);
-    return () => mq.removeEventListener('change', apply);
-  }, [pref]);
-}
-
-export function App() {
+function Shell() {
   const route = useRoute();
-  useTheme();
-  useEffect(() => { document.title = TITLES[route.name]; }, [route.name]);
-
-  const active = (r: Route) =>
-    r.name === route.name || (r.name === 'scan' && route.name === 'verify') ? 'page' : undefined;
+  const { active } = useSession();
+  useEffect(() => { document.title = `${TITLE[route.name]} · EcoCypher ESG`; }, [route.name]);
+  const current = (r: { match: Route['name'][] }) => (r.match.includes(route.name) ? 'page' : undefined);
 
   let screen;
   switch (route.name) {
-    case 'scan': screen = <Scan />; break;
-    case 'check': screen = <Check evidenceId={route.evidenceId} />; break;
-    case 'wallet': screen = <Wallet />; break;
+    case 'claims': screen = <Claims />; break;
+    case 'claim': screen = <ClaimDetail key={route.id} id={route.id} />; break;
+    case 'evidence': screen = <EvidenceList />; break;
+    case 'evidence-new': screen = <EvidenceNew key={route.tab ?? ''} tab={route.tab} />; break;
+    case 'evidence-item': screen = <EvidenceItem key={route.id} id={route.id} />; break;
+    case 'data': screen = <Data />; break;
+    case 'reports': screen = <Reports />; break;
     case 'settings': screen = <Settings />; break;
-    case 'verify': screen = <Verify key={route.id} id={route.id} />; break;
-    default: screen = <Home />;
+    default: screen = <Dashboard />;
   }
-
-  const brand = (
-    <a className="brand" href={href({ name: 'home' })} aria-label="EcoCypher home">
-      <img src="/logo.svg" alt="" width={34} height={34} />
-      <span><b>EcoCypher</b><small>Evidence companion</small></span>
-    </a>
-  );
 
   return (
     <div className="app">
       <aside className="sidebar" aria-label="Main">
-        {brand}
-        {NAV.map(({ route: r, label, Icon }) => (
-          <a key={r.name} className="side-link" href={href(r)} aria-current={active(r)}><Icon aria-hidden /> {label}</a>
-        ))}
+        <a className="brand" href={href({ name: 'dashboard' })}>
+          <img src="/logo.svg" alt="" width={36} height={36} />
+          <span><b>EcoCypher</b><small>ESG workspace</small></span>
+        </a>
+        <div className="company-pill" title={active?.company.name}>{active?.company.name}</div>
+        {NAV.map((n) => <a key={n.label} className="side-link" href={href(n.route)} aria-current={current(n)}><n.Icon aria-hidden /> {n.label}</a>)}
         <div className="spacer" />
-        <a className="side-link" href={href({ name: 'settings' })} aria-current={active({ name: 'settings' })}><SettingsIcon aria-hidden /> Settings</a>
+        {repo.mode === 'demo' && <div className="demo-pill">Demo workspace</div>}
+        <a className="side-link" href={href({ name: 'settings' })} aria-current={route.name === 'settings' ? 'page' : undefined}><SettingsIcon aria-hidden /> Settings</a>
       </aside>
 
       <header className="topbar">
-        {brand}
-        <span />
-        <a className="icon-btn settings-mobile" href={href({ name: 'settings' })} aria-label="Settings" aria-current={active({ name: 'settings' })}>
-          <SettingsIcon aria-hidden />
+        <a className="brand" href={href({ name: 'dashboard' })}>
+          <img src="/logo.svg" alt="" width={32} height={32} />
+          <span><b>EcoCypher</b><small>{active?.company.name}</small></span>
         </a>
+        <a className="icon-btn" href={href({ name: 'settings' })} aria-label="Settings" aria-current={route.name === 'settings' ? 'page' : undefined}><SettingsIcon aria-hidden /></a>
       </header>
 
-      <main className="content" id="main" key={route.name === 'verify' ? `v-${route.id}` : route.name}>
-        {screen}
-      </main>
+      <main className="content" id="main">{screen}</main>
 
       <nav className="tabbar" aria-label="Main">
-        {NAV.map(({ route: r, label, Icon }) => (
-          <a key={r.name} className="tab" href={href(r)} aria-current={active(r)}>
-            <span className="tab-ico"><Icon aria-hidden /></span>
-            {label}
+        {NAV.map((n) => (
+          <a key={n.label} className="tab" href={href(n.route)} aria-current={current(n)}>
+            <span className="tab-ico"><n.Icon aria-hidden /></span>{n.label}
           </a>
         ))}
       </nav>
-      <ToastHost />
     </div>
+  );
+}
+
+function Gate() {
+  const { ready, user, memberships } = useSession();
+  useTheme();
+  if (!ready) return <div className="splash"><img src="/logo.svg" alt="EcoCypher" width={72} height={72} /></div>;
+  if (!user) return <Auth />;
+  if (!memberships.length) return <Onboarding />;
+  return <Shell />;
+}
+
+export function App() {
+  return (
+    <SessionProvider>
+      <Gate />
+      <ToastHost />
+    </SessionProvider>
   );
 }

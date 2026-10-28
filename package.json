@@ -1,9 +1,9 @@
 {
-  "name": "ecocypher-app",
+  "name": "ecocypher-esg",
   "private": true,
-  "version": "1.0.0",
+  "version": "2.0.0",
   "type": "module",
-  "description": "EcoCypher Companion — scan, verify and check sustainability evidence on any device.",
+  "description": "EcoCypher ESG workspace: evidence-backed green claims, emissions and BRSR reporting for company ESG teams.",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
@@ -12,6 +12,7 @@
     "typecheck": "tsc -b"
   },
   "dependencies": {
+    "@supabase/supabase-js": "2.45.4",
     "jsqr": "1.4.0",
     "lucide-react": "0.468.0",
     "qrcode.react": "4.2.0",
