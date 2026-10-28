@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 
 export type ThemePref = 'system' | 'light' | 'dark';
-const KEY = 'ecocypher-theme';
+// Light is the default; dark is used only when someone picks it (or picks System on a dark device).
+const KEY = 'ecocypher-theme-v2';
 const listeners = new Set<(p: ThemePref) => void>();
-let pref: ThemePref = (() => { try { return (localStorage.getItem(KEY) as ThemePref) || 'system'; } catch { return 'system'; } })();
+let pref: ThemePref = (() => { try { return (localStorage.getItem(KEY) as ThemePref) || 'light'; } catch { return 'light'; } })();
 
 function apply() {
   const dark = pref === 'dark' || (pref === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);

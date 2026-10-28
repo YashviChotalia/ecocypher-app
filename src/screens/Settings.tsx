@@ -154,7 +154,7 @@ function AppCard() {
     window.addEventListener('beforeinstallprompt', on);
     return () => window.removeEventListener('beforeinstallprompt', on);
   }, []);
-  const themes: [ThemePref, string, typeof Sun][] = [['system', 'System', Laptop], ['light', 'Light', Sun], ['dark', 'Dark', Moon]];
+  const themes: [ThemePref, string, typeof Sun][] = [['light', 'Light', Sun], ['dark', 'Dark', Moon], ['system', 'Match device', Laptop]];
   return (
     <section className="card stack">
       <div className="section-title"><h2>App</h2></div>
